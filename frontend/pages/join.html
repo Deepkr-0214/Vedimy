@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vedimy - Join a Room</title>
+  <meta name="description" content="Enter a room code or paste your invitation link to join a secure Vedimy session.">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles/globals.css">
+  <link rel="stylesheet" href="../styles/components.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Ambient background blobs */
+    .bg-blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.18;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .bg-blob-1 {
+      width: 600px; height: 600px;
+      background: #3b82f6;
+      top: -150px; left: -150px;
+    }
+    .bg-blob-2 {
+      width: 500px; height: 500px;
+      background: #8b5cf6;
+      bottom: -120px; right: -100px;
+    }
+    .bg-blob-3 {
+      width: 300px; height: 300px;
+      background: #06b6d4;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    /* Grid overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .page-wrapper {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 520px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    /* Brand */
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      text-decoration: none;
+    }
+    .brand-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+    }
+    .brand-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Card */
+    .join-card {
+      width: 100%;
+      background: rgba(22, 27, 34, 0.85);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04) inset;
+    }
+
+    .card-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .card-header h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.85rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, #e6edf3, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .card-header p {
+      color: #8b949e;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    /* Room preview card */
+    .room-preview {
+      display: none;
+      background: rgba(59,130,246,0.06);
+      border: 1px solid rgba(59,130,246,0.25);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+      animation: fadeSlideIn 0.3s ease;
+    }
+    .room-preview.show { display: flex; align-items: center; gap: 0.9rem; }
+    .room-preview-icon {
+      width: 42px; height: 42px; flex-shrink: 0;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem;
+    }
+    .room-preview-icon.meeting { background: rgba(59,130,246,0.15); }
+    .room-preview-icon.exam    { background: rgba(239,68,68,0.15); }
+    .room-preview-info { flex: 1; min-width: 0; }
+    .room-preview-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .room-preview-meta { color: #8b949e; font-size: 0.8rem; margin-top: 2px; }
+    .room-preview-badge {
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge-meeting { background: rgba(59,130,246,0.15); color: #60a5fa; }
+    .badge-exam    { background: rgba(239,68,68,0.15);  color: #f87171; }
+    .badge-active  { background: rgba(16,185,129,0.15); color: #34d399; }
+    .badge-locked  { background: rgba(245,158,11,0.15); color: #fbbf24; }
+
+    /* Tabs */
+    .tab-group {
+      display: flex;
+      background: rgba(255,255,255,0.04);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 1.5rem;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 0.55rem;
+      border: none;
+      background: transparent;
+      color: #8b949e;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 500;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: rgba(59,130,246,0.2);
+      color: #60a5fa;
+      font-weight: 600;
+    }
+
+    /* Tab panels */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Form elements */
+    .input-group {
+      position: relative;
+      margin-bottom: 1rem;
+    }
+    .input-label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.5rem;
+    }
+    .input-field {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      color: #e6edf3;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      transition: all 0.2s;
+      outline: none;
+    }
+    .input-field:focus {
+      border-color: #3b82f6;
+      background: rgba(59,130,246,0.05);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+    .input-field::placeholder { color: #484f58; }
+    .input-field.code-input {
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      font-size: 1.15rem;
+      letter-spacing: 0.08em;
+      text-align: center;
+      text-transform: uppercase;
+    }
+    .input-field.error { border-color: #f87171; background: rgba(239,68,68,0.05); }
+
+    .input-hint {
+      font-size: 0.78rem;
+      color: #484f58;
+      margin-top: 0.4rem;
+    }
+    .input-hint.has-error { color: #f87171; }
+
+    /* Paste link textarea */
+    .link-textarea {
+      min-height: 80px;
+      resize: vertical;
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      font-size: 0.82rem;
+    }
+
+    /* CTA Button */
+    .btn-join {
+      width: 100%;
+      padding: 0.95rem;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #3b82f6, #6366f1);
+      color: white;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .btn-join:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(59,130,246,0.35);
+    }
+    .btn-join:active:not(:disabled) { transform: translateY(0); }
+    .btn-join:disabled {
+      background: rgba(255,255,255,0.08);
+      color: #484f58;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .btn-join .btn-icon { font-size: 1.1rem; }
+
+    /* Loading spinner */
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+
+    /* Biometric info banner */
+    .biometric-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      background: rgba(59,130,246,0.06);
+      border: 1px solid rgba(59,130,246,0.18);
+      border-radius: 10px;
+      padding: 0.9rem 1rem;
+      margin-top: 1.25rem;
+    }
+    .biometric-banner-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
+    .biometric-banner-text { font-size: 0.83rem; color: #8b949e; line-height: 1.5; }
+    .biometric-banner-text strong { color: #60a5fa; }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 1.25rem 0;
+    }
+    .divider-line { flex: 1; height: 1px; background: rgba(255,255,255,0.07); }
+    .divider-text { color: #484f58; font-size: 0.8rem; }
+
+    /* Footer links */
+    .page-footer {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #484f58;
+    }
+    .page-footer a {
+      color: #60a5fa;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .page-footer a:hover { text-decoration: underline; }
+
+    /* Animations */
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.5; }
+    }
+
+    /* Mobile */
+    @media (max-width: 540px) {
+      .join-card { padding: 2rem 1.25rem; }
+      .card-header h1 { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-blob bg-blob-1"></div>
+  <div class="bg-blob bg-blob-2"></div>
+  <div class="bg-blob bg-blob-3"></div>
+
+  <div class="page-wrapper">
+    <!-- Brand -->
+    <a href="/pages/index.html" class="brand">
+      <div class="brand-icon">🎓</div>
+      <span class="brand-name">Vedimy</span>
+    </a>
+
+    <!-- Main Card -->
+    <div class="join-card">
+      <div class="card-header">
+        <h1>Join a Session</h1>
+        <p>Enter the room code given by your host, or paste the invitation link you received.</p>
+      </div>
+
+      <!-- Room preview (shown when valid code is detected from URL) -->
+      <div class="room-preview" id="room-preview">
+        <div class="room-preview-icon meeting" id="preview-icon">📹</div>
+        <div class="room-preview-info">
+          <div class="room-preview-title" id="preview-title">Loading room...</div>
+          <div class="room-preview-meta" id="preview-meta">Hosted by...</div>
+        </div>
+        <div id="preview-badge" class="room-preview-badge badge-meeting">Meeting</div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tab-group" role="tablist">
+        <button class="tab-btn active" id="tab-code" role="tab" aria-selected="true" aria-controls="panel-code" onclick="switchTab('code')">
+          🔑 Room Code
+        </button>
+        <button class="tab-btn" id="tab-link" role="tab" aria-selected="false" aria-controls="panel-link" onclick="switchTab('link')">
+          🔗 Invitation Link
+        </button>
+      </div>
+
+      <!-- Panel: Room Code -->
+      <div class="tab-panel active" id="panel-code" role="tabpanel">
+        <div class="input-group">
+          <label class="input-label" for="code-input">Room Code</label>
+          <input
+            type="text"
+            id="code-input"
+            class="input-field code-input"
+            placeholder="VDM-XXXX"
+            maxlength="8"
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <div class="input-hint" id="code-hint">Enter the 8-character code provided by your host</div>
+        </div>
+        <button class="btn-join" id="btn-join-code" onclick="handleJoinCode()">
+          <span class="btn-icon">🚀</span>
+          <span id="btn-code-text">Continue to Verification</span>
+          <div class="spinner" id="spinner-code"></div>
+        </button>
+      </div>
+
+      <!-- Panel: Invitation Link -->
+      <div class="tab-panel" id="panel-link" role="tabpanel">
+        <div class="input-group">
+          <label class="input-label" for="link-input">Invitation Link</label>
+          <textarea
+            id="link-input"
+            class="input-field link-textarea"
+            placeholder="https://vedimy.app/pages/join.html?invite=VDM-XXXX"
+            autocomplete="off"
+            spellcheck="false"
+          ></textarea>
+          <div class="input-hint" id="link-hint">Paste the full invitation URL shared by your host</div>
+        </div>
+        <button class="btn-join" id="btn-join-link" onclick="handleJoinLink()">
+          <span class="btn-icon">🔗</span>
+          <span id="btn-link-text">Parse &amp; Continue</span>
+          <div class="spinner" id="spinner-link"></div>
+        </button>
+      </div>
+
+      <!-- Biometric notice -->
+      <div class="biometric-banner">
+        <div class="biometric-banner-icon">🔐</div>
+        <div class="biometric-banner-text">
+          <strong>Biometric verification required.</strong> After entering the room code, your camera will open automatically for a live face scan. Only registered participants can enter.
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="page-footer">
+      Already have an account? <a href="/pages/login.html">Sign in</a> &nbsp;·&nbsp;
+      <a href="/pages/dashboard.html">Go to Dashboard</a>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script type="module">
+    import { AppState } from '../js/core/state.js';
+    import { showToast } from '../js/components/toast.js';
+
+    // ─── Tab switcher ───────────────────────────────────────────────────────────
+    window.switchTab = (tab) => {
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+      });
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+
+      document.getElementById(`tab-${tab}`).classList.add('active');
+      document.getElementById(`tab-${tab}`).setAttribute('aria-selected', 'true');
+      document.getElementById(`panel-${tab}`).classList.add('active');
+    };
+
+    // ─── Room code normalizer ───────────────────────────────────────────────────
+    function normalizeCode(raw) {
+      const upper = raw.toUpperCase().trim();
+      // Accept with or without "VDM-" prefix
+      if (/^VDM-[A-Z0-9]{4}$/.test(upper)) return upper;
+      if (/^[A-Z0-9]{4}$/.test(upper)) return 'VDM-' + upper;
+      return null;
+    }
+
+    // ─── Extract room code from an invitation URL ───────────────────────────────
+    function extractCodeFromUrl(urlStr) {
+      try {
+        // Support both absolute URLs and relative paths
+        const url = urlStr.includes('://') ? new URL(urlStr.trim()) : new URL(urlStr.trim(), window.location.origin);
+        // Check ?invite=, ?code=, or the last path segment
+        return url.searchParams.get('invite') || url.searchParams.get('code') || null;
+      } catch {
+        return null;
+      }
+    }
+
+    // ─── Show room preview card ─────────────────────────────────────────────────
+    async function loadRoomPreview(code) {
+      const preview = document.getElementById('room-preview');
+      const titleEl = document.getElementById('preview-title');
+      const metaEl  = document.getElementById('preview-meta');
+      const badge   = document.getElementById('preview-badge');
+      const icon    = document.getElementById('preview-icon');
+
+      preview.classList.add('show');
+      titleEl.textContent = 'Verifying room…';
+      metaEl.textContent  = '';
+      badge.className     = 'room-preview-badge badge-meeting';
+      badge.textContent   = '…';
+
+      try {
+        const res = await fetch(`/api/rooms/${code}/info`);
+        if (!res.ok) throw new Error('Room not found');
+        const room = await res.json();
+
+        titleEl.textContent = room.title;
+        metaEl.textContent  = `Hosted by ${room.host_name} · ${room.status}`;
+        badge.textContent   = room.room_type.charAt(0).toUpperCase() + room.room_type.slice(1);
+        badge.className     = `room-preview-badge badge-${room.room_type}`;
+        icon.textContent    = room.room_type === 'exam' ? '📝' : '📹';
+        icon.className      = `room-preview-icon ${room.room_type}`;
+
+        if (room.is_locked) {
+          const lockedBadge = document.createElement('span');
+          lockedBadge.className = 'room-preview-badge badge-locked';
+          lockedBadge.textContent = '🔒 Locked';
+          lockedBadge.style.cssText = 'display:inline-block;margin-top:4px;margin-right:4px;font-size:0.7rem;';
+          metaEl.appendChild(document.createElement('br'));
+          metaEl.appendChild(lockedBadge);
+        } else {
+          metaEl.appendChild(document.createElement('br'));
+        }
+
+        // Feature 7: Optional Biometric Entry Verification
+        try {
+          const flags = JSON.parse(room.security_flags_json || '{}');
+          const mode = flags.biometric_mode || 'required';
+          const bioBadge = document.createElement('span');
+          bioBadge.className = 'room-preview-badge';
+          if (mode === 'disabled') {
+            bioBadge.textContent = '🔓 Face Not Required';
+            bioBadge.style.background = 'rgba(156,163,175,0.15)';
+            bioBadge.style.color = '#9ca3af';
+          } else if (mode === 'exam_only' && room.room_type !== 'exam') {
+             bioBadge.textContent = '🔓 Face Not Required';
+             bioBadge.style.background = 'rgba(156,163,175,0.15)';
+             bioBadge.style.color = '#9ca3af';
+          } else {
+            bioBadge.textContent = '🔐 Face Required';
+            bioBadge.style.background = 'rgba(59,130,246,0.15)';
+            bioBadge.style.color = '#60a5fa';
+          }
+          bioBadge.style.cssText += 'display:inline-block;margin-top:4px;font-size:0.7rem;';
+          metaEl.appendChild(bioBadge);
+
+          // Update the static biometric banner at the bottom based on the mode
+          const banner = document.querySelector('.biometric-banner');
+          if (bioBadge.textContent.includes('Not Required')) {
+            banner.style.display = 'none';
+          } else {
+            banner.style.display = 'flex';
+          }
+        } catch(e) {}
+
+        return room;
+      } catch (err) {
+        titleEl.textContent = 'Room not found';
+        metaEl.textContent  = code;
+        badge.textContent   = '?';
+        badge.className     = 'room-preview-badge';
+        badge.style.background = 'rgba(239,68,68,0.15)';
+        badge.style.color = '#f87171';
+        return null;
+      }
+    }
+
+    // ─── Navigate to biometric gate ─────────────────────────────────────────────
+    async function proceedToFaceAuth(code, room = null) {
+      // If user is not logged in, redirect to login with a return URL
+      const token = AppState.getToken();
+      const isExam = room?.room_type === 'exam';
+
+      if (!token) {
+        const returnPath = `/pages/face-auth.html?code=${code}${isExam ? '&exam=true' : ''}`;
+        window.location.href = `/pages/login.html?next=${encodeURIComponent(returnPath)}`;
+        return;
+      }
+
+      // Check biometric mode if room data is available
+      if (room) {
+        try {
+          const flags = JSON.parse(room.security_flags_json || '{}');
+          const mode = flags.biometric_mode || 'required';
+          
+          if (mode === 'disabled') {
+            window.location.href = `/pages/conference.html?code=${code}${isExam ? '&exam=true' : ''}`;
+            return;
+          }
+          if (mode === 'exam_only' && !isExam) {
+            window.location.href = `/pages/conference.html?code=${code}`;
+            return;
+          }
+        } catch(e) { console.warn('Security flags error:', e); }
+      }
+
+      const user = AppState.getUser();
+      // If face not registered, send to face-setup with return URL
+      if (user && !user.face_registered) {
+        showToast('Please register your face biometrics first.', 'warning');
+        setTimeout(() => {
+          window.location.href = '/pages/face-setup.html';
+        }, 1200);
+        return;
+      }
+
+      window.location.href = `/pages/face-auth.html?code=${code}${isExam ? '&exam=true' : ''}`;
+    }
+
+    // ─── Handle: Join by Room Code ──────────────────────────────────────────────
+    window.handleJoinCode = async () => {
+      const raw   = document.getElementById('code-input').value;
+      const code  = normalizeCode(raw);
+      const hint  = document.getElementById('code-hint');
+      const btn   = document.getElementById('btn-join-code');
+      const text  = document.getElementById('btn-code-text');
+      const spin  = document.getElementById('spinner-code');
+      const input = document.getElementById('code-input');
+
+      if (!code) {
+        input.classList.add('error');
+        hint.textContent = '⚠ Invalid room code. Expected format: VDM-XXXX';
+        hint.classList.add('has-error');
+        return;
+      }
+
+      input.classList.remove('error');
+      hint.textContent = '';
+      hint.classList.remove('has-error');
+
+      btn.disabled = true;
+      text.style.display = 'none';
+      spin.style.display = 'block';
+
+      const room = await loadRoomPreview(code);
+      spin.style.display = 'none';
+      text.style.display = 'inline';
+      btn.disabled = false;
+
+      if (!room) {
+        input.classList.add('error');
+        hint.textContent = '⚠ Room not found. Please check the code and try again.';
+        hint.classList.add('has-error');
+        return;
+      }
+
+      showToast(`Room found: ${room.title}`, 'success');
+      setTimeout(() => proceedToFaceAuth(code, room), 800);
+    };
+
+    // ─── Handle: Join by Invitation Link ───────────────────────────────────────
+    window.handleJoinLink = async () => {
+      const raw   = document.getElementById('link-input').value;
+      const hint  = document.getElementById('link-hint');
+      const btn   = document.getElementById('btn-join-link');
+      const text  = document.getElementById('btn-link-text');
+      const spin  = document.getElementById('spinner-link');
+      const area  = document.getElementById('link-input');
+
+      const extractedCode = extractCodeFromUrl(raw);
+      const code = extractedCode ? normalizeCode(extractedCode) : null;
+
+      if (!code) {
+        area.classList.add('error');
+        hint.textContent = '⚠ Could not extract a room code from this link. Paste the full invitation URL.';
+        hint.classList.add('has-error');
+        return;
+      }
+
+      area.classList.remove('error');
+      hint.textContent = `Detected code: ${code}`;
+      hint.classList.remove('has-error');
+
+      btn.disabled = true;
+      text.style.display = 'none';
+      spin.style.display = 'block';
+
+      const room = await loadRoomPreview(code);
+      spin.style.display = 'none';
+      text.style.display = 'inline';
+      btn.disabled = false;
+
+      if (!room) {
+        area.classList.add('error');
+        hint.textContent = '⚠ Room not found. This link may have expired or been revoked.';
+        hint.classList.add('has-error');
+        return;
+      }
+
+      showToast(`Joining: ${room.title}`, 'success');
+      setTimeout(() => proceedToFaceAuth(code, room), 800);
+    };
+
+    // ─── Auto-load from URL ?invite= or ?code= ─────────────────────────────────
+    (async () => {
+      const params = new URLSearchParams(window.location.search);
+      const inviteCode = params.get('invite') || params.get('code');
+
+      if (inviteCode) {
+        const code = normalizeCode(inviteCode);
+        if (code) {
+          document.getElementById('code-input').value = code;
+          const room = await loadRoomPreview(code);
+          if (room) {
+            showToast(`Invitation detected: ${room.title}`, 'info');
+            // Short delay then auto-proceed
+            setTimeout(() => proceedToFaceAuth(code, room), 1200);
+          }
+        }
+      }
+    })();
+
+    // ─── Live validation on code input ─────────────────────────────────────────
+    const codeInput = document.getElementById('code-input');
+    let previewDebounce;
+    codeInput.addEventListener('input', (e) => {
+      const hint = document.getElementById('code-hint');
+      codeInput.classList.remove('error');
+      hint.classList.remove('has-error');
+
+      const code = normalizeCode(e.target.value);
+      if (code) {
+        clearTimeout(previewDebounce);
+        previewDebounce = setTimeout(() => loadRoomPreview(code), 600);
+      } else {
+        document.getElementById('room-preview').classList.remove('show');
+        hint.textContent = 'Enter the 8-character code provided by your host';
+      }
+    });
+
+    codeInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') window.handleJoinCode();
+    });
+
+    document.getElementById('link-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); window.handleJoinLink(); }
+    });
+  </script>
+</body>
+</html>

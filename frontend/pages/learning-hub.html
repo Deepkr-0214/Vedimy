@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vedimy - Interactive Learning Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles/globals.css">
+  <link rel="stylesheet" href="../styles/components.css">
+  <link rel="stylesheet" href="../styles/layout.css">
+  <style>
+    .dash-layout { max-width:1100px; margin:0 auto; padding:2rem 1.5rem; }
+    .learning-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:1.5rem; }
+    .feature-card { background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:1.5rem; transition:all 0.3s; }
+    .feature-card:hover { transform:translateY(-4px); border-color:var(--accent-primary); box-shadow:var(--glow-blue); }
+    .feature-icon { font-size:2rem; margin-bottom:1rem; }
+    .feature-card h3 { margin-bottom:0.75rem; font-family:'Syne', sans-serif; }
+    .feature-card p { color:var(--text-secondary); font-size:0.9rem; line-height:1.6; margin-bottom:1.25rem; }
+    .btn-link { display:inline-block; padding:0.6rem 1.2rem; border-radius:8px; background:var(--accent-primary); color:white; text-decoration:none; font-weight:600; font-size:0.85rem; }
+    
+    .room-item { background:var(--bg-secondary); border-radius:10px; padding:1rem; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center; }
+    .room-info h4 { margin-bottom:0.25rem; }
+    .room-info p { font-size:0.8rem; color:var(--text-secondary); margin:0; }
+  </style>
+</head>
+<body>
+  <div class="sidebar-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="nav-brand" style="font-size:1.5rem;color:var(--accent-primary);">Vedimy</div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/pages/dashboard.html" class="sidebar-link"><span>📊</span> Dashboard</a>
+        <a href="/pages/security-activity.html" class="sidebar-link"><span>🛡</span> Security & Activity</a>
+        <a href="/pages/learning-hub.html" class="sidebar-link active"><span>📚</span> Learning Hub</a>
+      </nav>
+      <div style="padding: 1rem;">
+        <button id="logout-btn" class="sidebar-link" style="width:100%; border:none; background:transparent; cursor:pointer; color:var(--accent-danger);">
+          <span>🚪</span> Logout
+        </button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-header">
+        <h2 style="font-size:1.2rem;">Interactive Smart Learning Experience</h2>
+      </header>
+
+      <div class="content-area dash-layout">
+        <div class="welcome-bar">
+          <h1 style="font-size:1.75rem;margin-bottom:0.5rem;">Welcome to your Learning Hub</h1>
+          <p>Access AI-powered notes, smart quizzes, and automated learning support.</p>
+        </div>
+
+        <div class="learning-grid">
+          <div class="feature-card">
+            <div class="feature-icon">🧠</div>
+            <h3>AI-Powered Notes</h3>
+            <p>Get automated summaries, key points, and translations of your lectures instantly.</p>
+            <div id="latest-notes-list">
+               <div style="font-size:0.8rem;color:var(--text-secondary);">Select a past room to view notes.</div>
+            </div>
+            <a href="/pages/dashboard.html" class="btn-link" style="margin-top:1rem;">Go to Dashboard</a>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">📋</div>
+            <h3>Smart Quizzes</h3>
+            <p>Challenge yourself with AI-generated quizzes based on your lecture materials.</p>
+            <div id="latest-quizzes-list">
+               <div style="font-size:0.8rem;color:var(--text-secondary);">Quizzes appear here after lectures.</div>
+            </div>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">💬</div>
+            <h3>Real-time Interaction</h3>
+            <p>Engage with teachers and peers through live chat, hand raising, and shared whiteboards.</p>
+            <p style="font-style:italic;">Available inside active classrooms.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">🛡️</div>
+            <h3>Secure Environment</h3>
+            <p>Your education is protected by advanced biometric verification and session monitoring.</p>
+            <a href="/pages/security-activity.html" class="btn-link">View Security Logs</a>
+          </div>
+        </div>
+
+        <div style="margin-top:3rem;">
+          <h3 style="margin-bottom:1.5rem;">Recent Classes</h3>
+          <div id="recent-rooms-list">
+             <div style="color:var(--text-secondary);">Loading your recent classes...</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast-container"></div>
+  <script type="module">
+    import { AppState } from '../js/core/state.js';
+    import { api } from '../js/core/api.js';
+    import { showToast } from '../js/components/toast.js';
+
+    if (!AppState.getToken()) window.location.href = '/pages/login.html';
+
+    async function loadRecentClasses() {
+      try {
+        const rooms = await api.get('/rooms/my-attended');
+        const list = document.getElementById('recent-rooms-list');
+        
+        if (rooms.length === 0) {
+          list.innerHTML = '<div style="color:var(--text-secondary);background:var(--bg-card);padding:2rem;border-radius:12px;text-align:center;border:1px solid var(--border);">You haven\'t joined any classes yet. Join one using a room code!</div>';
+          return;
+        }
+
+        list.innerHTML = rooms.map(r => `
+          <div class="room-item">
+            <div class="room-info">
+              <h4>${r.title}</h4>
+              <p>${r.room_code} &bull; ${r.room_type.toUpperCase()}</p>
+            </div>
+            <div style="display:flex;gap:0.5rem;">
+               <button class="btn-outline" style="padding:0.4rem 0.8rem;font-size:0.8rem;" onclick="viewMaterials('${r.id}')">View Materials</button>
+               <button class="btn-primary" style="padding:0.4rem 0.8rem;font-size:0.8rem;" onclick="window.location.href='/pages/face-auth.html?code=${r.room_code}'">Join Again</button>
+            </div>
+          </div>
+        `).join('');
+
+      } catch (e) {
+        showToast('Error loading classes', 'error');
+      }
+    }
+
+    window.viewMaterials = async (roomId) => {
+       // We can redirect to dashboard or open a modal. 
+       // For simplicity in the hub, let's just show a toast or redirect.
+       window.location.href = '/pages/dashboard.html';
+    };
+
+    loadRecentClasses();
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      AppState.clearAuth();
+      window.location.href = '/pages/login.html';
+    });
+  </script>
+</body>
+</html>

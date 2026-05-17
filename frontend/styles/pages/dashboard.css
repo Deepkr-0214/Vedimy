@@ -1,0 +1,47 @@
+/* ── Dashboard ──────────────────────────────────────────────── */
+.dash-layout         { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+.welcome-bar         { margin-bottom: 2.5rem; }
+.welcome-bar h1      { font-size: 2rem; margin-bottom: 0.25rem; }
+.welcome-bar p       { color: var(--text-secondary); }
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2.5rem;
+}
+
+.stat-card           { padding: 1.5rem; border-radius: 14px; background: var(--bg-card); border: 1px solid var(--border); }
+.stat-card .label    { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.5rem; }
+.stat-card .value    { font-size: 2rem; font-weight: 700; font-family: 'Syne', sans-serif; }
+
+.section-title       { font-size: 1.1rem; font-weight: 600; margin-bottom: 1.25rem; }
+
+.join-row            { display: flex; gap: 0.75rem; margin-bottom: 2.5rem; }
+.join-row input      { flex: 1; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; color: white; font-size: 1rem; max-width: 300px; }
+.join-row input:focus { outline: none; border-color: var(--accent-primary); }
+
+.rooms-list          { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+
+.room-card           { padding: 1.25rem; border-radius: 12px; background: var(--bg-card); border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; }
+.room-card:hover     { border-color: var(--accent-primary); box-shadow: var(--glow-blue); }
+.room-card-header    { display: flex; justify-content: space-between; align-items: flex-start; }
+.room-card h3        { font-size: 1rem; margin-bottom: 0.25rem; }
+.room-code           { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-secondary); }
+
+.badge               { padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.75rem; }
+.badge-meeting       { background: var(--icon-blue-bg);  color: var(--accent-primary); }
+.badge-exam          { background: var(--icon-red-bg);   color: var(--accent-danger);  }
+.badge-active        { background: var(--icon-green-bg); color: var(--accent-success); }
+
+.room-actions        { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+.room-actions button { padding: 0.4rem 0.9rem; border-radius: 6px; border: none; cursor: pointer; font-size: 0.85rem; }
+
+.quick-actions       { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+.quick-btn           { padding: 0.75rem 1.5rem; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); cursor: pointer; font-size: 0.9rem; transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem; }
+.quick-btn:hover     { border-color: var(--accent-primary); background: var(--badge-bg); }
+
+@media (max-width: 640px) {
+  .join-row            { flex-direction: column; }
+  .join-row input      { max-width: 100%; }
+}

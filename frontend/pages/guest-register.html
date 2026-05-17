@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vedimy – Guest Registration</title>
+  <meta name="description" content="Pre-register for your upcoming session on Vedimy. Provide your details and biometric face image to enable smooth, secure entry.">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary:    #0A0E1A;
+      --bg-secondary:  #111827;
+      --bg-card:       #1A2235;
+      --accent-primary:#3B82F6;
+      --accent-success:#10B981;
+      --accent-danger: #EF4444;
+      --accent-warning:#F59E0B;
+      --text-primary:  #F9FAFB;
+      --text-secondary:#9CA3AF;
+      --border:        rgba(59,130,246,0.15);
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+    /* Animated background blobs */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      animation: float 8s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+    body::before {
+      width: 400px; height: 400px;
+      background: rgba(59,130,246,0.12);
+      top: -100px; left: -100px;
+    }
+    body::after {
+      width: 300px; height: 300px;
+      background: rgba(6,182,212,0.10);
+      bottom: -80px; right: -80px;
+      animation-delay: 2s;
+    }
+    @keyframes float {
+      from { transform: translate(0,0) scale(1); }
+      to   { transform: translate(30px,20px) scale(1.05); }
+    }
+
+    /* Card */
+    .card {
+      width: 100%;
+      max-width: 520px;
+      background: rgba(26,34,53,0.85);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(59,130,246,0.08);
+      position: relative;
+      z-index: 1;
+      animation: slideUp 0.5s ease;
+    }
+    @keyframes slideUp {
+      from { opacity:0; transform:translateY(24px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    /* Header */
+    .logo { font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:800;
+            background:linear-gradient(90deg,#3B82F6,#06B6D4); -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:0.25rem; }
+    .room-info { margin-bottom:2rem; }
+    .room-info h2 { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:700; margin-bottom:0.25rem; }
+    .room-info p { color:var(--text-secondary); font-size:0.875rem; }
+    .badge {
+      display:inline-flex; align-items:center; gap:0.4rem;
+      background:rgba(59,130,246,0.1); color:#60A5FA;
+      border:1px solid rgba(59,130,246,0.2); border-radius:20px;
+      padding:0.25rem 0.75rem; font-size:0.78rem; font-weight:600;
+      margin-bottom:1rem;
+    }
+
+    /* Form fields */
+    .field { margin-bottom:1.2rem; }
+    .field label { display:block; font-size:0.82rem; font-weight:600;
+                   color:var(--text-secondary); margin-bottom:0.45rem; letter-spacing:0.04em; }
+    .field label .req { color:var(--accent-danger); margin-left:2px; }
+    .field input, .field textarea {
+      width:100%; background:var(--bg-secondary); border:1px solid var(--border);
+      border-radius:10px; padding:0.8rem 1rem; color:var(--text-primary);
+      font-family:'DM Sans',sans-serif; font-size:0.9rem;
+      transition:border-color 0.2s, box-shadow 0.2s; outline:none;
+    }
+    .field input:focus, .field textarea:focus {
+      border-color:var(--accent-primary);
+      box-shadow:0 0 0 3px rgba(59,130,246,0.15);
+    }
+    .field textarea { resize:vertical; min-height:80px; }
+
+    /* Biometric capture area */
+    .biometric-section {
+      margin-bottom:1.5rem;
+      border:1px dashed rgba(59,130,246,0.3);
+      border-radius:14px;
+      padding:1.2rem;
+      background:rgba(59,130,246,0.03);
+    }
+    .biometric-section h3 { font-size:0.9rem; font-weight:600; margin-bottom:1rem;
+      display:flex; align-items:center; gap:0.4rem; }
+    .capture-tabs { display:flex; gap:0.5rem; margin-bottom:1rem; }
+    .tab-btn {
+      flex:1; padding:0.5rem; border:1px solid var(--border);
+      background:transparent; color:var(--text-secondary);
+      border-radius:8px; cursor:pointer; font-size:0.82rem; font-weight:600;
+      transition:all 0.2s; font-family:'DM Sans',sans-serif;
+    }
+    .tab-btn.active {
+      background:rgba(59,130,246,0.12); color:var(--accent-primary);
+      border-color:rgba(59,130,246,0.3);
+    }
+
+    /* Camera area */
+    #camera-panel { display:none; }
+    #camera-panel.visible { display:block; }
+    #video-feed {
+      width:100%; border-radius:10px; background:#000;
+      border:1px solid var(--border); display:block;
+      max-height:220px; object-fit:cover;
+    }
+    #capture-btn {
+      width:100%; margin-top:0.75rem; padding:0.7rem;
+      background:linear-gradient(135deg,#3B82F6,#06B6D4);
+      color:white; border:none; border-radius:10px; font-weight:600;
+      cursor:pointer; font-size:0.9rem; font-family:'DM Sans',sans-serif;
+      transition:opacity 0.2s;
+    }
+    #capture-btn:hover { opacity:0.88; }
+
+    /* Upload area */
+    #upload-panel { display:none; }
+    #upload-panel.visible { display:block; }
+    .file-drop {
+      border:2px dashed rgba(59,130,246,0.25); border-radius:10px;
+      padding:1.5rem; text-align:center; cursor:pointer;
+      transition:border-color 0.2s, background 0.2s; position:relative;
+    }
+    .file-drop:hover, .file-drop.drag-over {
+      border-color:var(--accent-primary); background:rgba(59,130,246,0.06);
+    }
+    .file-drop input[type=file] {
+      position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;
+    }
+    .file-drop p { color:var(--text-secondary); font-size:0.85rem; margin-top:0.5rem; }
+    .file-drop span { font-size:2rem; }
+
+    /* Preview */
+    #face-preview-wrap { display:none; margin-top:0.75rem; text-align:center; }
+    #face-preview {
+      width:100px; height:100px; object-fit:cover; border-radius:50%;
+      border:3px solid var(--accent-success);
+      box-shadow:0 0 16px rgba(16,185,129,0.3);
+    }
+    .preview-label { font-size:0.78rem; color:var(--accent-success); margin-top:0.4rem; font-weight:600; }
+    #remove-image-btn {
+      background:transparent; border:none; color:var(--accent-danger);
+      font-size:0.78rem; cursor:pointer; margin-top:0.3rem; font-family:'DM Sans',sans-serif;
+      text-decoration:underline;
+    }
+
+    /* Submit button */
+    .submit-btn {
+      width:100%; padding:0.9rem;
+      background:linear-gradient(135deg,#3B82F6,#06B6D4);
+      color:white; border:none; border-radius:12px; font-weight:700;
+      font-size:1rem; cursor:pointer; font-family:'DM Sans',sans-serif;
+      transition:opacity 0.2s, transform 0.15s; letter-spacing:0.02em;
+      position:relative;
+    }
+    .submit-btn:hover:not(:disabled) { opacity:0.88; transform:translateY(-1px); }
+    .submit-btn:disabled { opacity:0.5; cursor:not-allowed; }
+    .submit-btn .spinner {
+      display:none; width:18px; height:18px; border:2px solid rgba(255,255,255,0.3);
+      border-top-color:white; border-radius:50%;
+      animation:spin 0.7s linear infinite;
+      margin:0 auto;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* Status messages */
+    .msg { display:none; margin-top:1rem; padding:0.9rem 1rem; border-radius:10px;
+           font-size:0.875rem; line-height:1.5; font-weight:500; }
+    .msg.error   { background:rgba(239,68,68,0.12); color:#FCA5A5; border:1px solid rgba(239,68,68,0.25); }
+    .msg.success { background:rgba(16,185,129,0.12); color:#6EE7B7; border:1px solid rgba(16,185,129,0.25); }
+    .msg.warning { background:rgba(245,158,11,0.12); color:#FCD34D; border:1px solid rgba(245,158,11,0.25); }
+    .msg.visible { display:block; animation:slideUp 0.3s ease; }
+
+    /* Success screen */
+    #success-screen {
+      display:none; text-align:center; padding:1rem 0;
+      animation:slideUp 0.5s ease;
+    }
+    #success-screen .check-icon {
+      font-size:4rem; margin-bottom:1rem;
+      animation:pop 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+    }
+    @keyframes pop {
+      from { transform:scale(0); opacity:0; }
+      to   { transform:scale(1); opacity:1; }
+    }
+    #success-screen h2 { font-family:'Syne',sans-serif; font-size:1.5rem; margin-bottom:0.5rem; }
+    #success-screen p { color:var(--text-secondary); font-size:0.9rem; line-height:1.6; }
+
+    /* Error screen */
+    #error-screen { display:none; text-align:center; padding:1rem 0; }
+    #error-screen .err-icon { font-size:3.5rem; margin-bottom:1rem; }
+    #error-screen p { color:var(--text-secondary); font-size:0.9rem; }
+
+    /* Loading state */
+    #loading-screen { display:none; text-align:center; padding:2rem 0; }
+    .dots span {
+      display:inline-block; width:8px; height:8px; border-radius:50%;
+      background:var(--accent-primary); margin:0 3px;
+      animation:bounce 1s ease-in-out infinite;
+    }
+    .dots span:nth-child(2) { animation-delay:0.15s; }
+    .dots span:nth-child(3) { animation-delay:0.30s; }
+    @keyframes bounce {
+      0%,80%,100% { transform:scale(0.6); opacity:0.4; }
+      40% { transform:scale(1); opacity:1; }
+    }
+
+    #main-form { display:none; }
+
+    /* Privacy note */
+    .privacy-note {
+      margin-top:1.2rem; font-size:0.76rem; color:var(--text-secondary);
+      text-align:center; line-height:1.5;
+      border-top:1px solid var(--border); padding-top:1rem;
+    }
+    .privacy-note a { color:var(--accent-primary); }
+
+    /* Responsive */
+    @media (max-width: 540px) {
+      .card { padding:1.75rem 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="card" id="page-root">
+
+  <!-- Loading -->
+  <div id="loading-screen">
+    <div class="logo">Vedimy</div>
+    <p style="color:var(--text-secondary);margin-top:0.5rem 0 1.5rem;">Loading registration form…</p>
+    <div class="dots" style="margin-top:1.5rem;">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+
+  <!-- Error (invalid link) -->
+  <div id="error-screen">
+    <div class="logo">Vedimy</div>
+    <div class="err-icon" style="margin-top:1.5rem;">🔗</div>
+    <h2 style="font-family:'Syne',sans-serif;font-size:1.3rem;margin-bottom:0.5rem;">Invalid Link</h2>
+    <p id="error-msg">This registration link is invalid or has expired.</p>
+  </div>
+
+  <!-- Main Form -->
+  <div id="main-form">
+    <div class="logo">Vedimy</div>
+
+    <div class="room-info" style="margin-top:1rem;">
+      <div class="badge">📋 Pre-Registration Form</div>
+      <h2 id="room-title">Loading…</h2>
+      <p id="room-subtitle">Hosted by —</p>
+    </div>
+
+    <form id="reg-form" autocomplete="off">
+
+      <!-- Personal Details -->
+      <div class="field">
+        <label for="f-name">Full Name <span class="req">*</span></label>
+        <input type="text" id="f-name" name="guest_name" placeholder="Enter your full name" required>
+      </div>
+
+      <div class="field">
+        <label for="f-contact">Contact Number</label>
+        <input type="tel" id="f-contact" name="contact_number" placeholder="+91 98765 43210">
+      </div>
+
+      <div class="field">
+        <label for="f-address">Address</label>
+        <textarea id="f-address" name="address" placeholder="Your home or institution address"></textarea>
+      </div>
+
+      <!-- Biometric Section -->
+      <div class="biometric-section">
+        <h3>📸 Biometric Face Image <span style="color:var(--accent-danger);font-size:0.85rem;">*</span></h3>
+
+        <div class="capture-tabs">
+          <button type="button" class="tab-btn active" id="tab-upload-btn" onclick="switchTab('upload')">⬆ Upload Photo</button>
+          <button type="button" class="tab-btn" id="tab-camera-btn" onclick="switchTab('camera')">📷 Use Camera</button>
+        </div>
+
+        <!-- Upload -->
+        <div id="upload-panel" class="visible">
+          <div class="file-drop" id="file-drop-zone">
+            <input type="file" id="face-file-input" accept="image/jpeg,image/png,image/webp">
+            <span>🖼️</span>
+            <p>Click or drag & drop your photo here</p>
+            <p style="font-size:0.75rem;margin-top:0.25rem;color:rgba(156,163,175,0.7);">JPG, PNG or WEBP — clear face photo required</p>
+          </div>
+        </div>
+
+        <!-- Camera -->
+        <div id="camera-panel">
+          <video id="video-feed" autoplay playsinline muted></video>
+          <button type="button" id="capture-btn" onclick="captureFrame()">📸 Capture Photo</button>
+        </div>
+
+        <!-- Preview -->
+        <div id="face-preview-wrap">
+          <img id="face-preview" src="" alt="Face preview">
+          <div class="preview-label">✅ Face image selected</div>
+          <div><button type="button" id="remove-image-btn" onclick="removeImage()">Remove image</button></div>
+        </div>
+      </div>
+
+      <!-- Status messages -->
+      <div id="status-msg" class="msg"></div>
+
+      <button type="submit" class="submit-btn" id="submit-btn">
+        <span id="submit-label">✅ Submit Registration</span>
+        <div class="spinner" id="submit-spinner"></div>
+      </button>
+    </form>
+
+    <div class="privacy-note">
+      Your biometric data is encrypted and used only for identity verification in this session. 
+      It will not be shared with third parties.
+    </div>
+  </div>
+
+  <!-- Success Screen -->
+  <div id="success-screen">
+    <div class="logo">Vedimy</div>
+    <div class="check-icon" style="margin-top:1.5rem;">✅</div>
+    <h2>You're Registered!</h2>
+    <p style="margin-top:0.75rem;" id="success-msg">
+      Your details and biometric image have been saved. 
+      When you join the session using the room code, 
+      your identity will be verified automatically.
+    </p>
+    <div style="margin-top:1.5rem;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);
+      border-radius:12px;padding:1rem;font-size:0.85rem;color:var(--text-secondary);line-height:1.6;">
+      📌 <strong style="color:var(--text-primary);">Next step:</strong> When the host starts the session, 
+      join using the room code/link and your camera will be used to verify your face automatically.
+    </div>
+  </div>
+
+</div><!-- .card -->
+
+<canvas id="capture-canvas" style="display:none;"></canvas>
+
+<script>
+  const API = '/api';
+  let capturedBlob = null;
+  let videoStream  = null;
+  let formToken    = null;
+  let roomId       = null;
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  const params = new URLSearchParams(location.search);
+  formToken = params.get('token');
+
+  function show(id) {
+    ['loading-screen','error-screen','main-form','success-screen'].forEach(s => {
+      document.getElementById(s).style.display = 'none';
+    });
+    document.getElementById(id).style.display = 'block';
+  }
+
+  async function init() {
+    show('loading-screen');
+
+    if (!formToken) {
+      document.getElementById('error-msg').textContent = 'No registration token found in the URL.';
+      show('error-screen'); return;
+    }
+
+    try {
+      const res = await fetch(`${API}/guest-reg/${formToken}/form-info`);
+      const data = await res.json();
+      if (!res.ok) { document.getElementById('error-msg').textContent = data.error || 'Invalid link.'; show('error-screen'); return; }
+
+      document.getElementById('room-title').textContent = data.room_title;
+      document.getElementById('room-subtitle').textContent = `Hosted by ${data.host_name} · ${data.room_type === 'exam' ? '📝 Exam Session' : '🎥 Class Session'}`;
+      document.title = `Register for ${data.room_title} – Vedimy`;
+      roomId = data.room_id;
+      show('main-form');
+    } catch(e) {
+      document.getElementById('error-msg').textContent = 'Could not load the form. Please check your connection.';
+      show('error-screen');
+    }
+  }
+
+  init();
+
+  // ── Tab Switch ────────────────────────────────────────────────────────────
+  function switchTab(tab) {
+    const isUpload = tab === 'upload';
+    document.getElementById('upload-panel').classList.toggle('visible', isUpload);
+    document.getElementById('camera-panel').classList.toggle('visible', !isUpload);
+    document.getElementById('tab-upload-btn').classList.toggle('active', isUpload);
+    document.getElementById('tab-camera-btn').classList.toggle('active', !isUpload);
+
+    if (!isUpload) startCamera();
+    else stopCamera();
+  }
+
+  async function startCamera() {
+    try {
+      videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:'user' } });
+      document.getElementById('video-feed').srcObject = videoStream;
+    } catch(e) {
+      showStatus('Could not access camera. Please allow camera permission or use file upload.', 'error');
+      switchTab('upload');
+    }
+  }
+
+  function stopCamera() {
+    if (videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
+  }
+
+  function captureFrame() {
+    const video  = document.getElementById('video-feed');
+    const canvas = document.getElementById('capture-canvas');
+    canvas.width  = video.videoWidth  || 640;
+    canvas.height = video.videoHeight || 480;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    canvas.toBlob(blob => {
+      capturedBlob = blob;
+      const url = URL.createObjectURL(blob);
+      showPreview(url);
+      stopCamera();
+      switchTab('upload'); // hide camera after capture
+      document.getElementById('upload-panel').classList.remove('visible');
+    }, 'image/jpeg', 0.92);
+  }
+
+  // ── File Upload ───────────────────────────────────────────────────────────
+  document.getElementById('face-file-input').addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    capturedBlob = file;
+    showPreview(URL.createObjectURL(file));
+  });
+
+  // Drag & drop
+  const dropZone = document.getElementById('file-drop-zone');
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      capturedBlob = file;
+      showPreview(URL.createObjectURL(file));
+    }
+  });
+
+  function showPreview(url) {
+    document.getElementById('face-preview').src = url;
+    document.getElementById('face-preview-wrap').style.display = 'block';
+    document.getElementById('upload-panel').style.display = 'none';
+  }
+
+  function removeImage() {
+    capturedBlob = null;
+    document.getElementById('face-preview-wrap').style.display = 'none';
+    document.getElementById('upload-panel').style.display = 'block';
+    document.getElementById('face-file-input').value = '';
+  }
+
+  // ── Status Messages ───────────────────────────────────────────────────────
+  function showStatus(text, type = 'error') {
+    const el = document.getElementById('status-msg');
+    el.textContent = text;
+    el.className = `msg ${type} visible`;
+  }
+  function clearStatus() {
+    const el = document.getElementById('status-msg');
+    el.className = 'msg';
+  }
+
+  // ── Form Submit ───────────────────────────────────────────────────────────
+  document.getElementById('reg-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearStatus();
+
+    const name    = document.getElementById('f-name').value.trim();
+    const contact = document.getElementById('f-contact').value.trim();
+    const address = document.getElementById('f-address').value.trim();
+
+    if (!name) { showStatus('Please enter your full name.', 'error'); return; }
+    if (!capturedBlob) { showStatus('Please provide your face photo (upload or camera capture).', 'error'); return; }
+
+    // UI loading state
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    document.getElementById('submit-label').style.display = 'none';
+    document.getElementById('submit-spinner').style.display = 'block';
+    showStatus('Uploading and processing your biometric image… this may take a moment.', 'warning');
+
+    const fd = new FormData();
+    fd.append('guest_name',     name);
+    fd.append('contact_number', contact);
+    fd.append('address',        address);
+    fd.append('face_image',     capturedBlob, 'face.jpg');
+
+    try {
+      const res  = await fetch(`${API}/guest-reg/${formToken}/submit`, { method:'POST', body: fd });
+      const data = await res.json();
+
+      if (res.status === 422) {
+        // Submitted but face invalid
+        showStatus(`⚠️ Face issue: ${data.error} — Please upload a clear, well-lit photo of your face.`, 'error');
+        btn.disabled = false;
+        document.getElementById('submit-label').style.display = '';
+        document.getElementById('submit-spinner').style.display = 'none';
+        return;
+      }
+
+      if (!res.ok) {
+        showStatus(data.error || 'Submission failed. Please try again.', 'error');
+        btn.disabled = false;
+        document.getElementById('submit-label').style.display = '';
+        document.getElementById('submit-spinner').style.display = 'none';
+        return;
+      }
+
+      // Success
+      stopCamera();
+      show('success-screen');
+
+    } catch(err) {
+      showStatus('Network error. Please check your connection and try again.', 'error');
+      btn.disabled = false;
+      document.getElementById('submit-label').style.display = '';
+      document.getElementById('submit-spinner').style.display = 'none';
+    }
+  });
+</script>
+</body>
+</html>

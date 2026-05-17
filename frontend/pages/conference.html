@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vedimy - Conference Room</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles/globals.css">
+  <link rel="stylesheet" href="../styles/components.css">
+  <link rel="stylesheet" href="../styles/layout.css">
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/simple-peer@9/simplepeer.min.js"></script>
+  <style>
+    body { overflow: hidden; background: #202124; color: white; margin: 0; padding: 0; font-family: 'DM Sans', sans-serif; }
+    .meet-container { display: flex; width: 100vw; height: 100vh; position: relative; }
+    .main-view { flex: 1; display: flex; flex-direction: column; position: relative; padding-bottom: 80px; transition: margin-right 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .main-view.panel-open { margin-right: 360px; }
+
+    /* Grid */
+    #video-grid {
+      flex: 1; display: grid; gap: 16px; padding: 24px;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      align-content: center; justify-content: center;
+      overflow-y: auto;
+    }
+
+    /* Video Tile */
+    .video-tile {
+      position: relative; background: #3C4043;
+      border-radius: 8px; overflow: hidden;
+      box-shadow: 0 1px 2px 0 rgba(0,0,0,0.3), 0 1px 3px 1px rgba(0,0,0,0.15);
+      aspect-ratio: 16/9;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .video-tile video { width: 100%; height: 100%; object-fit: cover; }
+    .video-tile .name-label {
+      position: absolute; bottom: 12px; left: 12px;
+      background: rgba(0,0,0,0.6); color: white;
+      padding: 4px 12px; border-radius: 4px; font-size: 0.85rem; font-weight: 500;
+      backdrop-filter: blur(4px);
+    }
+
+    /* Bottom Controls */
+    .bottom-bar {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 80px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; background: #202124; z-index: 100;
+    }
+
+    .bottom-left-info {
+      display: flex; flex-direction: column; color: white; width: 250px;
+    }
+    .room-title-text { font-size: 1rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .room-code-tag { font-size: 0.85rem; color: #9AA0A6; margin-top: 2px; }
+
+    .controls-center {
+      display: flex; gap: 12px; position: absolute; left: 50%; transform: translateX(-50%);
+    }
+
+    .ctrl-btn {
+      width: 44px; height: 44px; border-radius: 50%; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; font-size: 1.25rem;
+      background: #3C4043; color: white; transition: all 0.2s;
+    }
+    .ctrl-btn:hover { background: #4a4e51; }
+    .ctrl-btn.active { background: #8AB4F8; color: #202124; }
+    .ctrl-btn.danger { background: #EA4335; color: white; }
+    .ctrl-btn.danger:hover { background: #d33828; }
+    .ctrl-btn.leave { width: 64px; border-radius: 32px; }
+
+    .controls-right {
+      display: flex; gap: 12px; align-items: center; width: 250px; justify-content: flex-end;
+    }
+
+    .right-icon-btn {
+      background: transparent; border: none; color: white; font-size: 1.3rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%;
+    }
+    .right-icon-btn:hover { background: rgba(255,255,255,0.1); }
+    .participant-count { font-size: 0.9rem; font-weight: 500; margin-left: 4px; }
+
+    /* Right Side Panel */
+    .side-panel {
+      position: fixed; top: 16px; right: 16px; bottom: 16px; width: 360px;
+      background: white; color: #202124; border-radius: 8px;
+      display: flex; flex-direction: column; overflow: hidden;
+      box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 2px 6px 2px rgba(60,64,67,0.15);
+      transform: translateX(120%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 200;
+    }
+    .side-panel.open { transform: translateX(0); }
+
+    .panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; border-bottom: 1px solid #E8EAED;
+    }
+    .panel-header h3 { font-size: 1.1rem; margin: 0; font-weight: 600; font-family: 'Syne', sans-serif;}
+    .close-panel-btn { background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: #5F6368; }
+
+    .panel-tabs { display: flex; border-bottom: 1px solid #E8EAED; }
+    .panel-tab {
+      flex: 1; padding: 12px; text-align: center; cursor: pointer;
+      font-size: 0.9rem; font-weight: 500; color: #5F6368;
+      border-bottom: 3px solid transparent; transition: all 0.2s;
+    }
+    .panel-tab.active { color: #1A73E8; border-bottom-color: #1A73E8; }
+
+    .panel-content { flex: 1; overflow-y: auto; background: #F8F9FA; display: flex; flex-direction: column; }
+
+    /* Chat */
+    #chat-panel { display: none; flex-direction: column; flex: 1; }
+    #chat-messages { flex: 1; padding: 16px; overflow-y: auto; }
+    .chat-msg { margin-bottom: 12px; }
+    .chat-msg .sender { font-size: 0.8rem; color: #5F6368; margin-bottom: 4px; font-weight: 500; }
+    .chat-msg .bubble { background: #E8F0FE; color: #1A73E8; padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; border-top-left-radius: 2px; display: inline-block; }
+
+    #chat-input-row { display: flex; padding: 16px; background: white; border-top: 1px solid #E8EAED; gap: 8px; }
+    #chat-input { flex: 1; background: #F1F3F4; border: 1px solid transparent; border-radius: 24px; padding: 12px 16px; font-size: 0.95rem; outline: none; }
+    #chat-input:focus { border-color: #1A73E8; }
+    #send-chat-btn { background: #1A73E8; color: white; border: none; border-radius: 50%; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1rem; }
+
+    /* Modal tweaks for light theme */
+    #create-exam-modal .glass-card { background: white; color: #202124; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border:none; }
+    #create-exam-modal input { background: #F1F3F4; color: #202124; border: 1px solid #E8EAED; }
+    #create-exam-modal label { color: #5F6368; }
+    #cancel-create-exam { background: #F1F3F4 !important; color: #202124 !important; border: none !important; }
+
+    @media (max-width: 768px) {
+      .main-view.panel-open { margin-right: 0; }
+      .side-panel { width: 100%; top: 0; right: 0; bottom: 0; border-radius: 0; }
+      .controls-center { position: static; transform: none; width: 100%; justify-content: center; gap: 8px; }
+      .bottom-left-info { display: none; }
+      .controls-right { position: absolute; right: 16px; top: -60px; background: rgba(32,33,36,0.8); padding: 8px 12px; border-radius: 24px; }
+      .ctrl-btn { width: 40px; height: 40px; font-size: 1.1rem; }
+    }
+  </style>
+  <link rel="stylesheet" href="../styles/chatbot.css">
+</head>
+<body>
+  <!-- Waiting Overlay (Feature 3 — Waiting Room) -->
+  <div id="waiting-overlay" style="display:none;position:fixed;inset:0;background:#202124;z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:1.25rem;">
+    <div style="text-align:center;max-width:420px;padding:2rem;">
+      <!-- Camera preview while waiting -->
+      <div style="position:relative;width:100%;max-width:320px;margin:0 auto 1.5rem auto;border-radius:12px;overflow:hidden;background:#3C4043;aspect-ratio:4/3;">
+        <video id="waiting-camera" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);display:block;"></video>
+        <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.65);padding:3px 12px;border-radius:20px;font-size:0.78rem;color:white;">
+          📷 Your Camera
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div style="display:flex;align-items:center;justify-content:center;gap:0.75rem;margin-bottom:0.75rem;">
+        <div style="width:12px;height:12px;border:3px solid #3C4043;border-top-color:#8AB4F8;border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0;"></div>
+        <h2 style="font-family:'Syne',sans-serif;font-size:1.35rem;margin:0;">Waiting for host approval</h2>
+      </div>
+      <p style="color:#9AA0A6;font-size:0.9rem;margin-bottom:0.5rem;">The host will let you in shortly. Please keep your camera ready.</p>
+      <p style="color:#9AA0A6;font-size:0.82rem;margin-bottom:1.5rem;">
+        Time waiting: <span id="waiting-timer" style="color:#8AB4F8;font-weight:600;">0:00</span>
+      </p>
+
+      <!-- Camera/Mic toggles while waiting -->
+      <div style="display:flex;gap:0.75rem;justify-content:center;margin-bottom:1.25rem;">
+        <button id="waiting-mute-btn" title="Toggle Microphone" style="width:44px;height:44px;border-radius:50%;border:none;cursor:pointer;background:#3C4043;color:white;font-size:1.2rem;transition:all 0.2s;">🎤</button>
+        <button id="waiting-video-btn" title="Toggle Camera" style="width:44px;height:44px;border-radius:50%;border:none;cursor:pointer;background:#3C4043;color:white;font-size:1.2rem;transition:all 0.2s;">📷</button>
+      </div>
+
+      <!-- Leave button -->
+      <button id="waiting-leave-btn" style="background:#EA4335;color:white;border:none;padding:0.7rem 2rem;border-radius:24px;font-size:0.95rem;font-weight:600;cursor:pointer;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+        Leave
+      </button>
+    </div>
+    <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+  </div>
+
+  <div class="meet-container">
+    <div class="main-view" id="main-view">
+      <div id="video-grid">
+        <!-- Injected by JS -->
+      </div>
+      
+      <!-- Whiteboard Overlay -->
+      <canvas id="whiteboard" style="display:none;position:absolute;top:0;left:0;width:100%;height:calc(100% - 80px);background:white;z-index:50;cursor:crosshair;"></canvas>
+      
+      <div class="bottom-bar">
+        <div class="bottom-left-info">
+          <div class="room-title-text" id="room-title">Loading...</div>
+          <div class="room-code-tag" id="room-code"></div>
+        </div>
+        
+        <div class="controls-center">
+          <button class="ctrl-btn" id="mute-btn" title="Toggle Microphone">🎤</button>
+          <button class="ctrl-btn" id="video-btn" title="Toggle Camera">📷</button>
+          <button class="ctrl-btn" id="screen-btn" title="Share Screen">🖥️</button>
+          <button class="ctrl-btn" id="hand-btn" title="Raise Hand">✋</button>
+          
+          <button class="ctrl-btn" id="host-exam-btn" title="Create Exam" style="display:none;background:#fce8e6;color:#d93025;">📝</button>
+          <button class="ctrl-btn" id="host-record-btn" title="Record" style="display:none;background:#e8f0fe;color:#1a73e8;">⏺️</button>
+          <button class="ctrl-btn" id="host-transcribe-btn" title="Live Transcript" style="display:none;background:#e6f4ea;color:#188038;">💬</button>
+          <button class="ctrl-btn" id="host-whiteboard-btn" title="Toggle Whiteboard" style="display:none;background:#fef7e0;color:#f29900;">🖌️</button>
+          <button class="ctrl-btn" id="host-quiz-btn" title="Live Quiz" style="display:none;background:#e8eaed;color:#202124;">📊</button>
+          <button class="ctrl-btn" id="host-lock-btn" title="Lock Room" style="display:none;background:#3c4043;color:white;">🔓</button>
+          <button class="ctrl-btn" id="host-pause-exam-btn" title="Pause Exam" style="display:none;background:#fff0cc;color:#b06000;">⏸️ Pause Exam</button>
+          <button class="ctrl-btn" id="rename-btn" title="Change Display Name" style="font-size:0.8rem;padding:0.4rem 0.75rem;">✏️ Rename</button>
+          
+          <button class="ctrl-btn danger leave" id="leave-btn" title="Leave call">📞</button>
+        </div>
+
+        <div class="controls-right">
+          <div style="display:flex;align-items:center;margin-right:12px;" title="Participants">
+            <span style="font-size:1.2rem;">👥</span>
+            <span class="participant-count" id="participant-count">0</span>
+          </div>
+          <button class="right-icon-btn" id="toggle-panel-btn" title="Chat with everyone">💬</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-panel" id="side-panel">
+      <div class="panel-header">
+        <h3>Meeting Details</h3>
+        <button class="close-panel-btn" id="close-panel-btn">&times;</button>
+      </div>
+      <div class="panel-tabs">
+        <div class="panel-tab active" data-tab="participants">People</div>
+        <div class="panel-tab" data-tab="chat">Chat</div>
+        <div class="panel-tab" id="tab-transcript" data-tab="transcript" style="display:none;">Transcript</div>
+        <div class="panel-tab" id="tab-waiting" data-tab="waiting" style="display:none;position:relative;">Waiting <span id="waiting-badge" style="display:none;background:#EA4335;color:white;font-size:0.7rem;padding:2px 6px;border-radius:10px;position:absolute;top:4px;right:4px;">0</span></div>
+      </div>
+      <div class="panel-content">
+        <div id="participants-panel" style="padding:16px;">
+          <div id="participants-list"></div>
+        </div>
+        <div id="chat-panel">
+          <div id="chat-settings" style="display:none;padding:0.5rem;background:var(--bg-secondary);border-bottom:1px solid var(--border);font-size:0.8rem;gap:0.5rem;">
+            <label style="display:flex;align-items:center;gap:0.3rem;"><input type="checkbox" id="chat-lock-toggle"> Lock Participant Chat</label>
+            <label style="display:flex;align-items:center;gap:0.3rem;"><input type="checkbox" id="chat-announce-toggle"> Make Announcement</label>
+          </div>
+          <div id="chat-messages"></div>
+          <div id="chat-input-row">
+            <input id="chat-input" placeholder="Send a message..." />
+            <button id="send-chat-btn">➤</button>
+          </div>
+        </div>
+        <div id="transcript-panel" style="display:none;padding:16px;flex-direction:column;flex:1;">
+          <div id="live-transcript" style="flex:1;overflow-y:auto;font-size:0.95rem;color:#5F6368;margin-bottom:16px;line-height:1.5;">Waiting for transcription...</div>
+          <button style="background:#1A73E8;color:white;border:none;padding:12px;border-radius:8px;font-weight:600;cursor:pointer;" id="summarize-btn">Generate Summary</button>
+          <div id="summary-result" style="margin-top:16px;font-size:0.9rem;color:#202124;white-space:pre-wrap;background:white;padding:12px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.1);"></div>
+        </div>
+        <div id="waiting-panel" style="display:none;padding:16px;">
+          <div id="waiting-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="create-exam-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;">
+    <div class="glass-card" style="width:90%;max-width:420px;border-radius:12px;padding:24px;">
+      <h3 style="margin-bottom:1.5rem;font-family:'Syne',sans-serif;">Create Exam for Room</h3>
+      <div style="margin-bottom:1rem;">
+        <label style="display:block;margin-bottom:0.4rem;font-size:0.875rem;font-weight:500;">Exam Title</label>
+        <input type="text" id="exam-title" style="width:100%;border-radius:8px;padding:0.75rem;" placeholder="Final Exam">
+      </div>
+      <div style="margin-bottom:1.5rem;">
+        <label style="display:block;margin-bottom:0.4rem;font-size:0.875rem;font-weight:500;">Duration (minutes)</label>
+        <input type="number" id="exam-duration" style="width:100%;border-radius:8px;padding:0.75rem;" value="60">
+      </div>
+      <div style="display:flex;gap:0.75rem;">
+        <button class="btn-primary" id="confirm-create-exam" style="flex:1;background:#1A73E8;border:none;">Create</button>
+        <button id="cancel-create-exam" style="flex:1;border-radius:8px;cursor:pointer;font-weight:600;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Quiz Host Modal -->
+  <div id="create-quiz-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;">
+    <div class="glass-card" style="width:90%;max-width:420px;border-radius:12px;padding:24px;">
+      <h3 style="margin-bottom:1.5rem;font-family:'Syne',sans-serif;">Launch Live Quiz</h3>
+      <div style="margin-bottom:1rem;">
+        <label style="display:block;margin-bottom:0.4rem;font-size:0.875rem;font-weight:500;">Question</label>
+        <input type="text" id="quiz-question" style="width:100%;border-radius:8px;padding:0.75rem;" placeholder="What is 2+2?">
+      </div>
+      <div id="quiz-options">
+        <input type="text" class="quiz-opt" style="width:100%;border-radius:8px;padding:0.5rem;margin-bottom:0.5rem;" placeholder="Option A" value="4">
+        <input type="text" class="quiz-opt" style="width:100%;border-radius:8px;padding:0.5rem;margin-bottom:0.5rem;" placeholder="Option B" value="5">
+      </div>
+      <button id="add-quiz-opt" style="background:transparent;border:none;color:var(--accent-primary);cursor:pointer;font-size:0.85rem;margin-bottom:1.5rem;">+ Add Option</button>
+      <div style="display:flex;gap:0.75rem;">
+        <button class="btn-primary" id="launch-quiz-btn" style="flex:1;">Launch</button>
+        <button id="cancel-quiz-btn" style="flex:1;border-radius:8px;cursor:pointer;font-weight:600;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Participant Quiz Overlay -->
+  <div id="participant-quiz-modal" style="display:none;position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:2000;width:90%;max-width:400px;background:var(--bg-primary);border:1px solid var(--accent-primary);border-radius:12px;padding:24px;box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+    <h3 style="margin-bottom:1rem;color:var(--accent-primary);" id="pt-quiz-q">Question</h3>
+    <div id="pt-quiz-options" style="display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1.5rem;"></div>
+    <button class="btn-primary" id="submit-quiz-answer-btn" style="width:100%;">Submit Answer</button>
+  </div>
+
+  <!-- Host Quiz Monitor Overlay -->
+  <div id="host-quiz-monitor" style="display:none;position:fixed;bottom:80px;right:20px;z-index:1000;width:300px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:0 4px 12px rgba(0,0,0,0.2);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+      <h4 style="margin:0;font-size:0.95rem;">Live Quiz Results</h4>
+      <button id="close-quiz-monitor" style="background:transparent;border:none;color:white;cursor:pointer;">&times;</button>
+    </div>
+    <div id="quiz-results-bars"></div>
+    <div style="font-size:0.8rem;color:var(--text-secondary);text-align:right;margin-top:0.5rem;" id="quiz-total-votes">0 votes</div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script type="module" src="../js/core/state.js"></script>
+  <script type="module" src="../js/core/api.js"></script>
+  <script type="module" src="../js/components/toast.js"></script>
+  <script type="module" src="../js/pages/conference.js"></script>
+
+<!-- Tawk.to Script -->
+<script type="text/javascript">
+var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+(function(){
+var s1=document.createElement("script"),
+s0=document.getElementsByTagName("script")[0];
+s1.async=true;
+s1.src='https://embed.tawk.to/6970564aa3974e19801a37aa/1jffd25nb';
+s1.charset='UTF-8';
+s1.setAttribute('crossorigin','*');
+s0.parentNode.insertBefore(s1,s0);
+})();
+</script>
+
+<!-- Vedimy Chatbot Script -->
+<script src="../js/chatbot.js"></script>
+
+</body>
+</html>

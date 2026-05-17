@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vedimy — See. Verify. Connect.</title>
+  <meta name="description" content="AI-Powered Video Conferencing & Secure Exam Proctoring Platform">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles/globals.css">
+  <style>
+    :root {
+      --bg: var(--bg-primary);
+      --bg2: var(--bg-secondary);
+      --bg3: var(--bg-card);
+      --blue: var(--accent-primary);
+      --cyan: var(--accent-secondary);
+      --green: var(--accent-success);
+      --red: var(--accent-danger);
+      --amber: var(--accent-warning);
+      --txt: var(--text-primary);
+      --txt2: var(--text-secondary);
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif;overflow-x:hidden;}
+    h1,h2,h3,h4{font-family:'Syne',sans-serif;}
+    a{text-decoration:none;color:inherit;}
+
+    /* ─── NAV ─── */
+    nav {
+      position:fixed;top:0;width:100%;z-index:999;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:1rem 6%;
+      background:rgba(10,14,26,0.85);
+      backdrop-filter:blur(14px);
+      border-bottom:1px solid var(--border);
+      transition:background .3s;
+    }
+    .nav-logo{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:#fff;}
+    .nav-logo span{color:var(--blue);}
+    .nav-links{display:flex;gap:2rem;align-items:center;}
+    .nav-links a{color:var(--txt2);font-size:.95rem;transition:color .2s;}
+    .nav-links a:hover{color:var(--text-primary);}
+    .nav-cta{display:flex;gap:.75rem;}
+    .btn-ghost{padding:.55rem 1.25rem;border-radius:8px;border:1px solid var(--border);color:var(--txt2);cursor:pointer;transition:all .2s;background:transparent;font-family:'DM Sans',sans-serif;font-size:.9rem;}
+    .btn-ghost:hover{border-color:var(--blue);color:var(--text-primary);}
+    .btn-primary{padding:.6rem 1.4rem;border-radius:8px;border:none;background:var(--blue);color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;font-size:.9rem;transition:all .2s;box-shadow:0 4px 14px rgba(59,130,246,.35);}
+    .btn-primary:hover{background:#2563EB;transform:translateY(-1px);box-shadow:0 6px 20px rgba(59,130,246,.5);}
+    .hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;}
+    .hamburger span{width:24px;height:2px;background:var(--text-primary);border-radius:2px;transition:all .3s;}
+
+    /* ─── HERO ─── */
+    .hero{
+      min-height:100vh;display:flex;align-items:center;justify-content:center;
+      text-align:center;padding:120px 6% 80px;position:relative;overflow:hidden;
+    }
+    .hero-glow-1{position:absolute;top:20%;left:15%;width:500px;height:500px;background:var(--glow-blob-1);border-radius:50%;filter:blur(100px);pointer-events:none;}
+    .hero-glow-2{position:absolute;bottom:20%;right:15%;width:400px;height:400px;background:var(--glow-blob-2);border-radius:50%;filter:blur(100px);pointer-events:none;}
+    .hero-badge{
+      display:inline-flex;align-items:center;gap:.5rem;
+      background:var(--badge-bg);border:1px solid var(--border);
+      padding:.35rem 1rem;border-radius:20px;font-size:.8rem;color:var(--blue);
+      margin-bottom:1.75rem;letter-spacing:.05em;
+    }
+    .hero-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--blue);animation:pulse 2s infinite;}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(1.5);}}
+    .hero h1{font-size:clamp(2.8rem,6vw,5rem);font-weight:800;line-height:1.1;margin-bottom:1.5rem;}
+    .gradient-text{background:linear-gradient(135deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    .hero p{font-size:clamp(1rem,2vw,1.2rem);color:var(--txt2);max-width:600px;margin:0 auto 2.5rem;line-height:1.7;}
+    .hero-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;}
+    .btn-large{padding:.85rem 2rem;font-size:1rem;}
+    .hero-stats{display:flex;gap:3rem;justify-content:center;margin-top:4rem;flex-wrap:wrap;}
+    .hero-stat{text-align:center;}
+    .hero-stat .num{font-family:'Syne',sans-serif;font-size:2rem;font-weight:700;color:var(--text-primary);}
+    .hero-stat .lbl{font-size:.8rem;color:var(--txt2);margin-top:.25rem;}
+
+    /* ─── SECTION SHARED ─── */
+    section{padding:80px 6%;}
+    .section-tag{display:inline-block;background:var(--badge-bg);border:1px solid var(--border);color:var(--blue);font-size:.78rem;padding:.3rem .85rem;border-radius:20px;letter-spacing:.05em;margin-bottom:1rem;}
+    .section-title{font-size:clamp(1.75rem,4vw,2.75rem);font-weight:700;margin-bottom:1rem;}
+    .section-subtitle{color:var(--txt2);font-size:1rem;max-width:580px;line-height:1.7;}
+    .section-header{margin-bottom:3.5rem;}
+
+    /* ─── FEATURES ─── */
+    #features{background:var(--bg2);}
+    .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;}
+    .feat-card{
+      background:var(--bg3);border:1px solid var(--border);border-radius:16px;
+      padding:2rem;transition:all .3s;cursor:default;
+    }
+    .feat-card:hover{border-color:var(--blue);transform:translateY(-4px);box-shadow:var(--glow-blue);}
+    .feat-icon{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:1.25rem;}
+    .icon-blue{background:var(--icon-blue-bg);}
+    .icon-cyan{background:var(--icon-cyan-bg);}
+    .icon-green{background:var(--icon-green-bg);}
+    .icon-amber{background:var(--icon-amber-bg);}
+    .icon-red{background:var(--icon-red-bg);}
+    .icon-purple{background:var(--icon-purple-bg);}
+    .feat-card h3{font-size:1.05rem;margin-bottom:.6rem;}
+    .feat-card p{color:var(--txt2);font-size:.9rem;line-height:1.65;}
+
+    /* ─── HOW IT WORKS ─── */
+    #how{position:relative;}
+    .steps-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:2rem;}
+    .step{text-align:center;padding:1.5rem;}
+    .step-num{
+      width:56px;height:56px;border-radius:50%;
+      background:linear-gradient(135deg,var(--blue),var(--cyan));
+      display:flex;align-items:center;justify-content:center;
+      font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:700;
+      margin:0 auto 1.25rem;
+    }
+    .step h3{font-size:1rem;margin-bottom:.5rem;}
+    .step p{color:var(--txt2);font-size:.875rem;line-height:1.6;}
+    .steps-connector{display:flex;align-items:center;justify-content:center;gap:1rem;margin:2rem 0;}
+
+    /* ─── ROLES ─── */
+    #roles{background:var(--bg2);}
+    .roles-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2rem;margin-top:3rem;}
+    .role-card{border-radius:16px;padding:2.5rem;border:1px solid var(--border);}
+    .role-card.student{background:var(--card-grad-1);}
+    .role-card.coordinator{background:var(--card-grad-2);}
+    .role-card.teacher{background:var(--card-grad-3);}
+    .role-header{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;}
+    .role-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;}
+    .role-header h3{font-size:1.15rem;}
+    .role-list{list-style:none;display:flex;flex-direction:column;gap:.65rem;}
+    .role-list li{display:flex;align-items:flex-start;gap:.6rem;font-size:.9rem;color:var(--txt2);}
+    .role-list li::before{content:'✓';color:var(--green);flex-shrink:0;margin-top:1px;}
+
+    /* ─── CTA ─── */
+    #cta{
+      background:var(--cta-bg);
+      border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+      text-align:center;
+    }
+    #cta h2{font-size:clamp(2rem,4vw,3rem);margin-bottom:1rem;}
+    #cta p{color:var(--txt2);margin-bottom:2.5rem;max-width:500px;margin-left:auto;margin-right:auto;}
+    .cta-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;}
+
+    /* ─── FOOTER ─── */
+    footer{background:var(--bg2);border-top:1px solid var(--border);padding:3rem 6% 2rem;}
+    .footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:3rem;margin-bottom:3rem;}
+    .footer-brand p{color:var(--txt2);font-size:.9rem;line-height:1.7;margin-top:.75rem;max-width:280px;}
+    .footer-col h4{font-size:.85rem;font-weight:600;letter-spacing:.08em;color:var(--txt2);margin-bottom:1rem;text-transform:uppercase;}
+    .footer-col a{display:block;color:var(--txt2);font-size:.875rem;margin-bottom:.5rem;transition:color .2s;}
+    .footer-col a:hover{color:var(--text-primary);}
+    .footer-bottom{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding-top:1.5rem;flex-wrap:wrap;gap:1rem;}
+    .footer-bottom p{color:var(--txt2);font-size:.8rem;}
+
+    /* ─── RESPONSIVE ─── */
+    @media(max-width:768px){
+      .nav-links,.nav-cta{display:none;}
+      .nav-links.open,.nav-cta.open{display:flex;flex-direction:column;gap:1rem;}
+      .hamburger{display:flex;}
+      nav{flex-wrap:wrap;}
+      .mobile-menu{display:none;width:100%;flex-direction:column;gap:.75rem;padding:1rem 0;}
+      .mobile-menu.open{display:flex;}
+      .mobile-menu a{color:var(--txt2);font-size:1rem;}
+      .footer-grid{grid-template-columns:1fr 1fr;}
+      .hero-stats{gap:2rem;}
+    }
+    @media(max-width:480px){
+      .footer-grid{grid-template-columns:1fr;}
+    }
+
+    /* ─── ANIMATION ─── */
+    @keyframes slideUp{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
+    .anim{animation:slideUp .7s ease both;}
+    .d1{animation-delay:.1s;opacity:0;}
+    .d2{animation-delay:.2s;opacity:0;}
+    .d3{animation-delay:.3s;opacity:0;}
+    .d4{animation-delay:.4s;opacity:0;}
+  </style>
+  <link rel="stylesheet" href="../styles/chatbot.css">
+</head>
+<body>
+
+<div id="navbar-root"></div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow-1"></div>
+  <div class="hero-glow-2"></div>
+  <div style="position:relative;z-index:10;">
+    <div class="hero-badge anim d1">🔴 Live AI Proctoring Platform</div>
+    <h1 class="anim d2">See. Verify.<br><span class="gradient-text">Connect.</span></h1>
+    <p class="anim d3">
+      The most advanced AI-powered platform for secure online exams, real-time video conferencing, and intelligent teaching tools — built for the modern educational institution.
+    </p>
+    <div class="hero-btns anim d4">
+      <a href="/pages/register.html"><button class="btn-primary btn-large">Start for Free →</button></a>
+      <a href="#features"><button class="btn-ghost btn-large">See Features</button></a>
+    </div>
+    <div class="hero-stats anim d4">
+      <div class="hero-stat">
+        <div class="num">99.9%</div>
+        <div class="lbl">Uptime SLA</div>
+      </div>
+      <div class="hero-stat">
+        <div class="num">&lt;100ms</div>
+        <div class="lbl">Latency</div>
+      </div>
+      <div class="hero-stat">
+        <div class="num">50+</div>
+        <div class="lbl">Participants/Room</div>
+      </div>
+      <div class="hero-stat">
+        <div class="num">12</div>
+        <div class="lbl">Languages Supported</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-header">
+    <div class="section-tag">✦ Core Features</div>
+    <h2 class="section-title">Everything You Need in One Platform</h2>
+    <p class="section-subtitle">A complete suite of tools for conducting fair, secure, and intelligent examinations and meetings.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feat-card">
+      <div class="feat-icon icon-blue">🎥</div>
+      <h3>WebRTC Video Conferencing</h3>
+      <p>Peer-to-peer encrypted video calls with auto-arranging grid layouts, screen sharing, and real-time chat — for up to 50 participants.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon icon-red">🛡️</div>
+      <h3>AI Face Proctoring</h3>
+      <p>Continuous face detection and verification during exams. Detects no-face, multiple faces, and unknown face violations automatically.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon icon-cyan">🔒</div>
+      <h3>Secure Room System</h3>
+      <p>Unique room codes, waiting rooms, host-controlled entry, and optional password protection for every session.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon icon-green">🧠</div>
+      <h3>AI Teaching Studio</h3>
+      <p>Auto-summarize lectures, translate content into 12 languages, and generate MCQ/short-answer exam questions from any transcript or PDF.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon icon-amber">📊</div>
+      <h3>Coordinator Dashboard</h3>
+      <p>Live candidate monitoring with real-time violation feeds, manual warning controls, and force-remove capabilities.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon icon-purple">📄</div>
+      <h3>Automated PDF Reports</h3>
+      <p>Instantly generate detailed exam reports with violation screenshots, attendance logs, and coordinator action history.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-header">
+    <div class="section-tag">✦ How It Works</div>
+    <h2 class="section-title">Up and Running in Minutes</h2>
+    <p class="section-subtitle">A seamless experience from account creation to your first secure exam session.</p>
+  </div>
+  <div class="steps-grid">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h3>Create Account</h3>
+      <p>Register as a student, coordinator, or teacher. Email verification keeps things secure.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <h3>Register Your Face</h3>
+      <p>Capture 3 angles of your face. Encrypted and stored securely — no third-party access.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <h3>Join or Create a Room</h3>
+      <p>Use a 6-character room code to join instantly. Face verification happens automatically at the door.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <h3>Start Exam or Meeting</h3>
+      <p>Coordinators control exam start/stop. AI proctoring runs silently in the background throughout.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOR YOU -->
+<section id="roles">
+  <div class="section-header">
+    <div class="section-tag">✦ Role-Based Access</div>
+    <h2 class="section-title">Built for Everyone</h2>
+    <p class="section-subtitle">Different features for every role — students, coordinators, and teachers all have a dedicated experience.</p>
+  </div>
+  <div class="roles-grid">
+    <div class="role-card student">
+      <div class="role-header">
+        <div class="role-icon" style="background:rgba(59,130,246,.15);">🎓</div>
+        <div>
+          <h3>I'm a Student</h3>
+          <p style="color:var(--txt2);font-size:.85rem;">Secure, fair exams</p>
+        </div>
+      </div>
+      <ul class="role-list">
+        <li>Face-verified room entry</li>
+        <li>Real-time proctoring with instant alerts</li>
+        <li>View AI lecture notes and summaries</li>
+        <li>Practice with AI-generated exam questions</li>
+        <li>Multi-language content support</li>
+      </ul>
+    </div>
+    <div class="role-card coordinator">
+      <div class="role-header">
+        <div class="role-icon" style="background:rgba(16,185,129,.15);">👁️</div>
+        <div>
+          <h3>I'm a Coordinator</h3>
+          <p style="color:var(--txt2);font-size:.85rem;">Full exam oversight</p>
+        </div>
+      </div>
+      <ul class="role-list">
+        <li>Live candidate monitoring dashboard</li>
+        <li>Real-time violation alerts via WebSocket</li>
+        <li>Manual warn, mute, or remove candidates</li>
+        <li>Download detailed violation reports as PDF</li>
+        <li>Coordinator presence badge for candidates</li>
+      </ul>
+    </div>
+    <div class="role-card teacher">
+      <div class="role-header">
+        <div class="role-icon" style="background:rgba(139,92,246,.15);">🧑‍🏫</div>
+        <div>
+          <h3>I'm a Teacher</h3>
+          <p style="color:var(--txt2);font-size:.85rem;">AI-powered teaching tools</p>
+        </div>
+      </div>
+      <ul class="role-list">
+        <li>Record or paste lecture transcripts</li>
+        <li>Upload PDF lecture notes for AI processing</li>
+        <li>Auto-generate lecture summaries & key points</li>
+        <li>Translate content to 12 Indian & world languages</li>
+        <li>Generate MCQ and short-answer exam questions</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta">
+  <h2>Ready to Run Your First<br><span class="gradient-text">Secure Exam?</span></h2>
+  <p>Join institutions using Vedimy for fair, AI-powered online examinations. Free to get started.</p>
+  <div class="cta-btns">
+    <a href="/pages/register.html"><button class="btn-primary btn-large">Create Free Account →</button></a>
+    <a href="/pages/login.html"><button class="btn-ghost btn-large">Sign In</button></a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="nav-logo">Vedi<span style="color:var(--blue);">my</span></div>
+      <p>AI-Powered Video Conferencing & Secure Exam Proctoring Platform. Deployed on Railway. Built for scale.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#roles">Use cases</a>
+      <a href="/pages/register.html">Sign up</a>
+    </div>
+    <div class="footer-col">
+      <h4>Platform</h4>
+      <a href="/pages/conference.html">Conference</a>
+      <a href="/pages/exam-room.html">Exam Room</a>
+      <a href="/pages/ai-teaching.html">AI Studio</a>
+      <a href="/pages/coordinator.html">Coordinator</a>
+    </div>
+    <div class="footer-col">
+      <h4>Account</h4>
+      <a href="/pages/login.html">Sign In</a>
+      <a href="/pages/register.html">Register</a>
+      <a href="/pages/dashboard.html">Dashboard</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 Vedimy. All rights reserved.</p>
+    <p>Built with Flask · SQLite · WebRTC · Socket.IO</p>
+  </div>
+</footer>
+
+<script type="module" src="../js/core/state.js"></script>
+<script type="module" src="../js/components/navbar.js"></script>
+<script>
+  // Navbar scroll effect
+  window.addEventListener('scroll', () => {
+    const nav = document.getElementById('navbar');
+    if (nav) {
+      nav.style.background = window.scrollY > 50 
+        ? 'var(--nav-bg)' 
+        : 'var(--nav-bg)';
+      // Add a slight box shadow or border if needed when scrolled
+      if(window.scrollY > 50) {
+        nav.style.boxShadow = '0 4px 20px rgba(0,0,0,0.1)';
+      } else {
+        nav.style.boxShadow = 'none';
+      }
+    }
+  });
+
+  // Intersection Observer for scroll animations
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.animation = 'slideUp 0.6s ease forwards';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.feat-card, .step, .role-card').forEach(el => {
+    el.style.opacity = '0';
+    observer.observe(el);
+  });
+</script>
+
+<!-- Tawk.to Script -->
+<script type="text/javascript">
+var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+(function(){
+var s1=document.createElement("script"),
+s0=document.getElementsByTagName("script")[0];
+s1.async=true;
+s1.src='https://embed.tawk.to/6970564aa3974e19801a37aa/1jffd25nb';
+s1.charset='UTF-8';
+s1.setAttribute('crossorigin','*');
+s0.parentNode.insertBefore(s1,s0);
+})();
+</script>
+
+<!-- Vedimy Chatbot Script -->
+<script src="../js/chatbot.js"></script>
+
+</body>
+</html>

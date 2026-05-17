@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vedimy - Exam Room</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700&family=DM+Sans:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles/globals.css">
+  <link rel="stylesheet" href="../styles/components.css">
+  <link rel="stylesheet" href="../styles/layout.css">
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/simple-peer@9/simplepeer.min.js"></script>
+  <link rel="stylesheet" href="../styles/pages/exam-room.css">
+  <link rel="stylesheet" href="../styles/chatbot.css">
+</head>
+<body>
+  <div class="exam-layout">
+    <div class="exam-header">
+      <div>
+        <div class="exam-title" id="exam-title">Exam Loading...</div>
+        <div style="font-size:0.75rem;color:var(--text-secondary);" id="exam-status">Waiting to start...</div>
+      </div>
+      <div class="exam-timer" id="exam-timer">--:--</div>
+      <div class="warnings-badge">
+        ⚠️ Warnings: <span id="warning-count">0</span> / <span id="max-warnings">3</span>
+      </div>
+    </div>
+
+    <div id="coordinator-badge">🛡 Exam Coordinator is Present</div>
+    <div class="face-status" id="face-status">👤 Verifying...</div>
+    <div class="violation-banner" id="violation-banner"></div>
+
+    <div class="exam-body">
+      <div class="questions-pane" id="questions-pane">
+        <h3 style="margin-bottom:0.5rem;">Instructions</h3>
+        <p id="exam-instructions" style="color:var(--text-secondary);margin-bottom:1.5rem;font-size:0.9rem;">No specific instructions provided.</p>
+        <div id="questions-container"></div>
+      </div>
+      <div id="video-grid-container">
+        <div id="video-grid"></div>
+      </div>
+    </div>
+
+    <div class="exam-controls">
+      <button class="ctrl-btn" id="mute-btn" title="Mute">🎤</button>
+      <button class="ctrl-btn" id="video-btn" title="Camera">📷</button>
+      <button class="ctrl-btn" id="hand-btn" title="Raise Hand">✋</button>
+      <button class="btn-primary" id="submit-btn" style="background:var(--accent-danger);">Submit &amp; Leave</button>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+  <script type="module" src="../js/core/state.js"></script>
+  <script type="module" src="../js/core/api.js"></script>
+  <script type="module" src="../js/components/toast.js"></script>
+  <script type="module" src="../js/pages/exam-room.js"></script>
+
+<!-- Tawk.to Script -->
+<script type="text/javascript">
+var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+(function(){
+var s1=document.createElement("script"),
+s0=document.getElementsByTagName("script")[0];
+s1.async=true;
+s1.src='https://embed.tawk.to/6970564aa3974e19801a37aa/1jffd25nb';
+s1.charset='UTF-8';
+s1.setAttribute('crossorigin','*');
+s0.parentNode.insertBefore(s1,s0);
+})();
+</script>
+
+<!-- Vedimy Chatbot Script -->
+<script src="../js/chatbot.js"></script>
+
+</body>
+</html>

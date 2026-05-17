@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vedimy - Security & Activity</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles/globals.css">
+  <link rel="stylesheet" href="../styles/components.css">
+  <link rel="stylesheet" href="../styles/layout.css">
+  <style>
+    .dash-layout { max-width:1100px; margin:0 auto; padding:2rem 1.5rem; }
+    .tabs { display:flex; gap:1rem; border-bottom:1px solid var(--border); margin-bottom:2rem; }
+    .tab-btn { padding:0.75rem 1rem; border:none; background:transparent; color:var(--text-secondary); cursor:pointer; font-weight:600; font-size:0.9rem; border-bottom:2px solid transparent; transition:all 0.2s; }
+    .tab-btn.active { color:var(--accent-primary); border-bottom-color:var(--accent-primary); }
+    .log-container { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+    table { width:100%; border-collapse:collapse; }
+    th { text-align:left; padding:1rem; background:rgba(255,255,255,0.03); font-size:0.85rem; color:var(--text-secondary); border-bottom:1px solid var(--border); }
+    td { padding:1rem; border-bottom:1px solid var(--border); font-size:0.9rem; }
+    .status-pill { padding:0.2rem 0.6rem; border-radius:12px; font-size:0.75rem; font-weight:600; }
+    .status-success { background:var(--icon-green-bg); color:var(--accent-success); }
+    .status-failed { background:var(--icon-red-bg); color:var(--accent-danger); }
+    .status-warn { background:var(--icon-amber-bg); color:var(--accent-warning); }
+  </style>
+</head>
+<body>
+  <div class="sidebar-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="nav-brand" style="font-size:1.5rem;color:var(--accent-primary);">Vedimy</div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/pages/dashboard.html" class="sidebar-link"><span>📊</span> Dashboard</a>
+        <a href="/pages/security-activity.html" class="sidebar-link active"><span>🛡</span> Security & Activity</a>
+        <a href="/pages/learning-hub.html" class="sidebar-link"><span>📚</span> Learning Hub</a>
+      </nav>
+      <div style="padding: 1rem;">
+        <button id="logout-btn" class="sidebar-link" style="width:100%; border:none; background:transparent; cursor:pointer; color:var(--accent-danger);">
+          <span>🚪</span> Logout
+        </button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-header">
+        <h2 style="font-size:1.2rem;">Security & Activity Center</h2>
+      </header>
+
+      <div class="content-area dash-layout">
+        <div class="welcome-bar">
+          <h1 style="font-size:1.75rem;margin-bottom:0.5rem;">Secure Session Protection</h1>
+          <p>Monitor your biometric logs, session history, and security activity.</p>
+        </div>
+
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchTab('auth')">🔐 Session History</button>
+          <button class="tab-btn" onclick="switchTab('biometric')">👤 Biometric Logs</button>
+          <button class="tab-btn" onclick="switchTab('attendance')">📋 Attendance</button>
+          <button class="tab-btn" onclick="switchTab('security')">🚨 Security Monitoring</button>
+        </div>
+
+        <div id="auth-panel" class="tab-panel">
+          <div class="log-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>IP Address</th>
+                  <th>Method</th>
+                  <th>Status</th>
+                  <th>User Agent</th>
+                </tr>
+              </thead>
+              <tbody id="auth-logs"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="biometric-panel" class="tab-panel" style="display:none;">
+          <div class="log-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Result</th>
+                  <th>Confidence</th>
+                </tr>
+              </thead>
+              <tbody id="biometric-logs"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="attendance-panel" class="tab-panel" style="display:none;">
+          <div class="log-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Join Time</th>
+                  <th>Leave Time</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="attendance-logs"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="security-panel" class="tab-panel" style="display:none;">
+          <div class="log-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Event</th>
+                  <th>Details</th>
+                </tr>
+              </thead>
+              <tbody id="security-logs"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast-container"></div>
+  <script type="module">
+    import { AppState } from '../js/core/state.js';
+    import { api } from '../js/core/api.js';
+    import { showToast } from '../js/components/toast.js';
+
+    if (!AppState.getToken()) window.location.href = '/pages/login.html';
+
+    async function loadLogs() {
+      try {
+        const data = await api.get('/analytics/security-activity');
+        
+        // Auth Logs
+        document.getElementById('auth-logs').innerHTML = data.auth_logs.map(l => `
+          <tr>
+            <td>${new Date(l.timestamp).toLocaleString()}</td>
+            <td>${l.ip_address}</td>
+            <td><span class="status-pill" style="background:var(--badge-bg);">${l.auth_method}</span></td>
+            <td><span class="status-pill status-${l.status}">${l.status}</span></td>
+            <td style="font-size:0.75rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;">${l.user_agent}</td>
+          </tr>
+        `).join('') || '<tr><td colspan="5" style="text-align:center;">No logs found</td></tr>';
+
+        // Biometric Logs
+        document.getElementById('biometric-logs').innerHTML = data.biometric_logs.map(l => `
+          <tr>
+            <td>${new Date(l.timestamp).toLocaleString()}</td>
+            <td><span class="status-pill ${l.result === 'matched' ? 'status-success' : 'status-failed'}">${l.result}</span></td>
+            <td>${(l.confidence * 100).toFixed(1)}%</td>
+          </tr>
+        `).join('') || '<tr><td colspan="3" style="text-align:center;">No logs found</td></tr>';
+
+        // Attendance Logs
+        document.getElementById('attendance-logs').innerHTML = data.attendance_logs.map(l => `
+          <tr>
+            <td>${l.join_time ? new Date(l.join_time).toLocaleString() : 'N/A'}</td>
+            <td>${l.leave_time ? new Date(l.leave_time).toLocaleString() : 'Active'}</td>
+            <td><span class="status-pill status-success">${l.status}</span></td>
+          </tr>
+        `).join('') || '<tr><td colspan="3" style="text-align:center;">No logs found</td></tr>';
+
+        // Security Logs
+        document.getElementById('security-logs').innerHTML = data.security_logs.map(l => `
+          <tr>
+            <td>${new Date(l.timestamp).toLocaleString()}</td>
+            <td><span class="status-pill status-warn">${l.event_type}</span></td>
+            <td style="font-size:0.8rem;">${JSON.stringify(l.details)}</td>
+          </tr>
+        `).join('') || '<tr><td colspan="3" style="text-align:center;">No logs found</td></tr>';
+
+      } catch (e) {
+        showToast('Failed to load logs: ' + e.message, 'error');
+      }
+    }
+
+    window.switchTab = (tab) => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+      
+      event.target.classList.add('active');
+      document.getElementById(tab + '-panel').style.display = 'block';
+    };
+
+    loadLogs();
+    
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      AppState.clearAuth();
+      window.location.href = '/pages/login.html';
+    });
+  </script>
+</body>
+</html>

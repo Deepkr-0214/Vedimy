@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vedimy - Ready to Join?</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles/globals.css">
+  <link rel="stylesheet" href="../styles/components.css">
+  <style>
+    body { background: #202124; color: white; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; font-family: 'DM Sans', sans-serif; }
+    .auth-container { display: flex; flex-direction: column; align-items: center; max-width: 800px; width: 100%; padding: 2rem; }
+    .auth-header { text-align: center; margin-bottom: 2rem; }
+    .auth-header h1 { font-family: 'Syne', sans-serif; font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .auth-header p { color: #9AA0A6; font-size: 1.1rem; }
+    
+    .video-preview { 
+      position: relative; width: 100%; max-width: 640px; aspect-ratio: 16/9; 
+      border-radius: 12px; overflow: hidden; background: #3C4043; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5); margin-bottom: 2rem;
+    }
+    video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+    
+    .video-overlay { 
+      position: absolute; inset: 0; border: 4px solid transparent; border-radius: 12px; 
+      transition: all 0.3s ease; pointer-events: none; 
+    }
+    .video-overlay.verifying { border-color: #8AB4F8; box-shadow: inset 0 0 40px rgba(138,180,248,0.3); }
+    .video-overlay.success { border-color: #81C995; box-shadow: inset 0 0 40px rgba(129,201,149,0.3); }
+    .video-overlay.error { border-color: #F28B82; box-shadow: inset 0 0 40px rgba(242,139,130,0.3); }
+
+    .action-row { display: flex; gap: 1rem; align-items: center; justify-content: center; }
+    .btn-verify { 
+      padding: 0.85rem 2rem; font-size: 1.1rem; border-radius: 24px; border: none; 
+      background: #8AB4F8; color: #202124; font-weight: 600; cursor: pointer; transition: background 0.2s;
+    }
+    .btn-verify:hover { background: #aecbfa; }
+    .btn-verify:disabled { background: #5F6368; color: #9AA0A6; cursor: not-allowed; }
+    
+    .btn-cancel { 
+      padding: 0.85rem 2rem; font-size: 1.1rem; border-radius: 24px; border: 1px solid #5F6368; 
+      background: transparent; color: #8AB4F8; font-weight: 600; cursor: pointer; transition: background 0.2s;
+    }
+    .btn-cancel:hover { background: rgba(138,180,248,0.08); }
+
+    .status-text { margin-top: 1rem; font-size: 1rem; color: #9AA0A6; height: 1.5rem; text-align: center; }
+
+    /* Access Denied overlay */
+    #access-denied { display:none; position:fixed; inset:0; background:#1a0606; z-index:999; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:2rem; animation:fadeIn 0.4s ease; }
+    #access-denied.show { display:flex; }
+    .denied-icon { font-size:5rem; margin-bottom:1.5rem; animation:shake 0.5s ease; }
+    .denied-title { font-family:'Syne',sans-serif; font-size:2.2rem; font-weight:700; color:#F28B82; margin-bottom:0.75rem; }
+    .denied-sub { color:#9AA0A6; font-size:1rem; max-width:380px; line-height:1.6; margin-bottom:2rem; }
+    .denied-actions { display:flex; gap:1rem; flex-wrap:wrap; justify-content:center; }
+    .btn-retry { padding:0.8rem 2rem; border-radius:24px; border:none; background:#8AB4F8; color:#202124; font-weight:700; cursor:pointer; font-size:1rem; }
+    .btn-back  { padding:0.8rem 2rem; border-radius:24px; border:1px solid #5F6368; background:transparent; color:#8AB4F8; font-weight:600; cursor:pointer; font-size:1rem; }
+    @keyframes fadeIn { from{opacity:0;transform:scale(0.97)} to{opacity:1;transform:scale(1)} }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-header">
+      <h1>Ready to join?</h1>
+      <p id="room-display">Verifying room...</p>
+    </div>
+    
+    <div class="video-preview">
+      <video id="webcam" autoplay playsinline muted></video>
+      <div class="video-overlay" id="video-overlay"></div>
+    </div>
+    
+    <div class="action-row">
+      <button class="btn-cancel" id="cancel-btn">← Back</button>
+      <button class="btn-verify" id="verify-btn" disabled>Prove Liveness to Verify</button>
+    </div>
+    <div class="status-text" id="status-text" style="color:var(--accent-warning);">Liveness Check: Please move your head left and right slowly.</div>
+  </div>
+
+  <!-- Access Denied Screen -->
+  <div id="access-denied">
+    <div class="denied-icon">🚫</div>
+    <div class="denied-title">Access Denied</div>
+    <div class="denied-sub">Your face did not match the biometric record on file. Unauthorized users cannot enter this session.</div>
+    <div class="denied-actions">
+      <button class="btn-retry" id="retry-btn">Try Again</button>
+      <button class="btn-back"  id="denied-back-btn">Leave</button>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script type="module">
+    import { AppState } from '../js/core/state.js';
+    import { api } from '../js/core/api.js';
+    import { showToast } from '../js/components/toast.js';
+
+    if (!AppState.getToken()) window.location.href = '/pages/login.html';
+    
+    // Safety check: if user bypasses onboarding somehow, force them to setup
+    if (!AppState.getUser()?.face_registered) {
+      window.location.href = '/pages/face-setup.html';
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const roomCode = params.get('code');
+    const isExam = params.get('exam') === 'true';
+
+    if (!roomCode) {
+      window.location.href = '/pages/dashboard.html';
+    } else {
+      document.getElementById('room-display').textContent = `Joining Room: ${roomCode}`;
+    }
+
+    // Resolve roomId from room code (needed for pool-based verify)
+    let roomId = null;
+    try {
+      const roomInfo = await fetch(`/api/rooms/${roomCode}/info`);
+      if (roomInfo.ok) {
+        const rd = await roomInfo.json();
+        roomId = rd.id || null;
+        // If host uploaded guest profiles, show that info
+        if (rd.title) document.getElementById('room-display').textContent = `Joining: ${rd.title}`;
+      }
+    } catch(_) {}
+
+    const video = document.getElementById('webcam');
+    const verifyBtn = document.getElementById('verify-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+    const overlay = document.getElementById('video-overlay');
+    const statusText = document.getElementById('status-text');
+    let stream = null;
+
+    async function startCamera() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        video.onloadeddata = () => {
+          startLivenessCheck();
+        };
+      } catch (e) {
+        showToast('Camera access is required to join.', 'error');
+        verifyBtn.disabled = true;
+        statusText.textContent = 'Camera blocked. Please allow permissions.';
+      }
+    }
+
+    // --- Lightweight Motion Liveness Check ---
+    let livenessPassed = false;
+    let livenessInterval;
+
+    function startLivenessCheck() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 160; // low res for fast processing
+      canvas.height = 120;
+      const ctx = canvas.getContext('2d');
+      let previousImageData = null;
+      let motionScoreAccumulator = 0;
+
+      livenessInterval = setInterval(() => {
+        if (livenessPassed) {
+          clearInterval(livenessInterval);
+          return;
+        }
+
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const currentImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        
+        if (previousImageData) {
+          let diffPixels = 0;
+          for (let i = 0; i < currentImageData.data.length; i += 4) {
+            const rDiff = Math.abs(currentImageData.data[i] - previousImageData.data[i]);
+            const gDiff = Math.abs(currentImageData.data[i+1] - previousImageData.data[i+1]);
+            const bDiff = Math.abs(currentImageData.data[i+2] - previousImageData.data[i+2]);
+            if (rDiff + gDiff + bDiff > 100) diffPixels++;
+          }
+          
+          // Require significant but not massive motion (head turning)
+          if (diffPixels > 500 && diffPixels < 15000) {
+            motionScoreAccumulator++;
+          }
+          
+          if (motionScoreAccumulator > 5) {
+            livenessPassed = true;
+            verifyBtn.disabled = false;
+            verifyBtn.textContent = 'Verify Face & Join';
+            statusText.textContent = 'Liveness verified. Ready to join.';
+            statusText.style.color = '#81C995';
+            overlay.className = 'video-overlay success';
+            setTimeout(() => overlay.className = 'video-overlay', 1000);
+          }
+        }
+        previousImageData = currentImageData;
+      }, 300);
+    }
+
+    function captureFrame() {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      const ctx = canvas.getContext('2d');
+      // Flip logic for the capture
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      return canvas.toDataURL('image/jpeg', 0.8);
+    }
+
+    const backDest = document.referrer.includes('join.html') ? '/pages/join.html' : (document.referrer.includes('dashboard') ? '/pages/dashboard.html' : '/pages/join.html');
+    cancelBtn.addEventListener('click', () => {
+      clearInterval(livenessInterval);
+      stream?.getTracks().forEach(t => t.stop());
+      window.location.href = backDest;
+    });
+    document.getElementById('denied-back-btn').addEventListener('click', () => {
+      stream?.getTracks().forEach(t => t.stop());
+      window.location.href = backDest;
+    });
+    document.getElementById('retry-btn').addEventListener('click', () => {
+      document.getElementById('access-denied').classList.remove('show');
+      verifyBtn.disabled = false;
+      verifyBtn.textContent = 'Verify Face & Join';
+      overlay.className = 'video-overlay';
+      statusText.textContent = 'Try again — look directly at the camera.';
+      statusText.style.color = '#9AA0A6';
+    });
+
+    verifyBtn.addEventListener('click', async () => {
+      verifyBtn.disabled = true;
+      verifyBtn.textContent = 'Verifying...';
+      overlay.className = 'video-overlay verifying';
+      statusText.textContent = 'Analyzing biometrics...';
+
+      const base64Image = captureFrame();
+
+      try {
+        let res;
+        // Prefer room-scoped pool verification if we have a room ID
+        if (roomId) {
+          res = await api.post(`/guest-face/${roomId}/verify`, { image: base64Image });
+          // Map pool response to common shape
+          res.verified = res.verified;
+          res.confidence = res.confidence;
+        } else {
+          // Fallback: self-registered check
+          const selfRes = await api.post('/face/verify', { image: base64Image });
+          res = { verified: selfRes.match, confidence: selfRes.confidence, error: selfRes.error };
+        }
+
+        if (res.verified) {
+          overlay.className = 'video-overlay success';
+          verifyBtn.textContent = 'Verified!';
+          verifyBtn.style.background = '#81C995';
+          verifyBtn.style.color = '#202124';
+          const pct = Math.round((res.confidence || 0) * 100);
+          statusText.textContent = res.label
+            ? `Matched: ${res.label} (${pct}%)`
+            : `Match confidence: ${pct}%`;
+
+          showToast('Verification successful! Joining...', 'success');
+          setTimeout(() => {
+            stream?.getTracks().forEach(t => t.stop());
+            if (isExam) {
+              window.location.href = `/pages/exam-room.html?code=${roomCode}`;
+            } else {
+              window.location.href = `/pages/conference.html?code=${roomCode}`;
+            }
+          }, 1000);
+        } else {
+          // Provide specific error messages for security events
+          const alertMessages = {
+            no_face:        '⚠ No face detected. Look directly at the camera.',
+            multiple_faces: '⚠ Multiple faces detected. Only one person per screen.',
+            no_match:       '⚠ Face not recognized. You are not on the guest list.',
+            decode_failed:  '⚠ Image capture failed. Please try again.',
+          };
+          const errKey = res.error || 'no_match';
+          throw new Error(alertMessages[errKey] || 'Face did not match our records.');
+        }
+
+      } catch (err) {
+        overlay.className = 'video-overlay error';
+        verifyBtn.disabled = false;
+        verifyBtn.textContent = 'Try Again';
+        statusText.textContent = 'Verification failed.';
+        showToast(err.message || 'Face verification failed.', 'error');
+        // Show full-screen access denied after a short delay
+        setTimeout(() => {
+          document.getElementById('access-denied').classList.add('show');
+        }, 1200);
+      }
+    });
+
+    startCamera();
+  </script>
+</body>
+</html>

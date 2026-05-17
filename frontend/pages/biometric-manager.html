@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vedimy - Biometric Manager</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles/globals.css">
+  <link rel="stylesheet" href="../styles/components.css">
+  <link rel="stylesheet" href="../styles/layout.css">
+  <link rel="stylesheet" href="../styles/pages/biometric-manager.css">
+
+</head>
+<body>
+<div class="sidebar-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="nav-brand" style="font-size:1.5rem;color:var(--accent-primary);">Vedimy</div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="/pages/dashboard.html" class="sidebar-link"><span>📊</span> Dashboard</a>
+      <a href="/pages/biometric-manager.html" class="sidebar-link active"><span>🔐</span> Biometric Manager</a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="top-header">
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <h2 style="font-size:1.2rem;">🔐 Biometric Manager</h2>
+      </div>
+      <div class="top-header-right">
+        <select id="room-selector" style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.75rem;color:var(--text-primary);font-size:0.9rem;">
+          <option value="">Select a Room...</option>
+        </select>
+      </div>
+    </header>
+
+    <div class="content-area">
+      <div class="page" id="page-content" style="display:none;">
+
+        <!-- Biometric Mode -->
+        <div class="section-card">
+          <h2>⚙️ Biometric Verification Mode</h2>
+          <div class="mode-grid">
+            <div class="mode-card" data-mode="required" onclick="setMode('required')">
+              <div class="mc-icon">🔐</div>
+              <div class="mc-title">Required for All</div>
+              <div class="mc-desc">Every participant must pass face verification before entering classes or exams.</div>
+            </div>
+            <div class="mode-card" data-mode="exam_only" onclick="setMode('exam_only')">
+              <div class="mc-icon">📝</div>
+              <div class="mc-title">Exams Only</div>
+              <div class="mc-desc">Biometric check is enforced only for exam rooms. Classes allow direct entry.</div>
+            </div>
+            <div class="mode-card" data-mode="disabled" onclick="setMode('disabled')">
+              <div class="mc-icon">🔓</div>
+              <div class="mc-title">Disabled</div>
+              <div class="mc-desc">Skip biometric verification entirely. Anyone with the code can enter.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Upload -->
+        <div class="section-card">
+          <h2>📁 Upload Guest Biometric Images</h2>
+          <div class="drop-zone" id="drop-zone">
+            <div class="dz-icon">🗂</div>
+            <p><strong>Drag & drop images or a folder here</strong></p>
+            <p>AI will automatically detect faces and store biometric encodings</p>
+            <div class="dz-hint">Supported: JPG, JPEG, PNG</div>
+          </div>
+          <div class="upload-actions">
+            <input type="file" id="file-input" accept=".jpg,.jpeg,.png" multiple style="display:none">
+            <input type="file" id="folder-input" accept=".jpg,.jpeg,.png" multiple webkitdirectory style="display:none">
+            <button class="btn-primary btn-upload-file" onclick="document.getElementById('file-input').click()">
+              📄 Select Images
+            </button>
+            <button class="btn-primary btn-upload-folder" style="background:var(--bg-secondary);border:1px solid var(--border);" onclick="document.getElementById('folder-input').click()">
+              📂 Select Folder
+            </button>
+          </div>
+          <div class="progress-bar-wrap" id="progress-wrap">
+            <div class="progress-bar-fill" id="progress-fill"></div>
+          </div>
+          <div id="upload-summary" style="margin-top:0.75rem;font-size:0.85rem;display:none;"></div>
+          <div id="upload-results"></div>
+        </div>
+
+        <!-- Stored Profiles -->
+        <div class="section-card">
+          <div class="profiles-header">
+            <h2 style="margin-bottom:0;">👤 Stored Guest Profiles <span class="profiles-count" id="profile-count"></span></h2>
+            <button id="clear-all-btn" style="background:var(--icon-red-bg);color:var(--accent-danger);border:none;border-radius:8px;padding:0.4rem 0.9rem;cursor:pointer;font-size:0.82rem;font-weight:600;">
+              🗑 Clear All
+            </button>
+          </div>
+          <div class="profiles-grid" id="profiles-grid">
+            <div class="empty-profiles">No profiles uploaded yet.</div>
+          </div>
+        </div>
+
+        <!-- Security Logs -->
+        <div class="section-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+            <h2 style="margin-bottom:0;">🚨 Verification Logs & Security Alerts</h2>
+            <button onclick="loadLogs()" style="background:transparent;border:1px solid var(--border);border-radius:8px;padding:0.35rem 0.75rem;color:var(--text-secondary);cursor:pointer;font-size:0.8rem;">↺ Refresh</button>
+          </div>
+          <div class="logs-wrap">
+            <table class="logs-table">
+              <thead><tr>
+                <th>Alert</th><th>Result</th><th>Confidence</th><th>Matched Profile</th><th>Time</th>
+              </tr></thead>
+              <tbody id="logs-body"><tr><td colspan="5" style="text-align:center;color:var(--text-secondary);padding:1rem;">Select a room to view logs.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+      <div id="no-room-msg" style="text-align:center;padding:4rem;color:var(--text-secondary);">
+        <div style="font-size:3rem;margin-bottom:1rem;">🔐</div>
+        <div style="font-size:1.1rem;font-weight:600;margin-bottom:0.5rem;">Select a room to manage biometrics</div>
+        <div style="font-size:0.9rem;">Choose a room from the dropdown above to upload guest face profiles and configure verification settings.</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast-container"></div>
+
+<script type="module">
+  import { AppState } from '../js/core/state.js';
+  import { api } from '../js/core/api.js';
+  import { showToast } from '../js/components/toast.js';
+
+  if (!AppState.getToken()) window.location.href = '/pages/login.html';
+  const user = AppState.getUser();
+  if (user?.role !== 'host') { showToast('Host access required.','error'); setTimeout(()=>window.location.href='/pages/dashboard.html',1500); }
+
+  let currentRoomId = null;
+  let currentMode = 'required';
+
+  // ── Load rooms into selector ────────────────────────────────────────────────
+  async function loadRooms() {
+    try {
+      const rooms = await api.get('/rooms/my');
+      const sel = document.getElementById('room-selector');
+      rooms.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r.id;
+        opt.textContent = `${r.title} (${r.room_code})`;
+        sel.appendChild(opt);
+      });
+      // Auto-select from ?room= param
+      const urlRoom = new URLSearchParams(window.location.search).get('room');
+      if (urlRoom) { sel.value = urlRoom; sel.dispatchEvent(new Event('change')); }
+    } catch(e) { showToast('Failed to load rooms','error'); }
+  }
+
+  document.getElementById('room-selector').addEventListener('change', async (e) => {
+    currentRoomId = e.target.value || null;
+    if (!currentRoomId) {
+      document.getElementById('page-content').style.display = 'none';
+      document.getElementById('no-room-msg').style.display = 'block';
+      return;
+    }
+    document.getElementById('page-content').style.display = 'block';
+    document.getElementById('no-room-msg').style.display = 'none';
+    await Promise.all([loadProfiles(), loadLogs(), loadMode()]);
+  });
+
+  // ── Biometric Mode ──────────────────────────────────────────────────────────
+  async function loadMode() {
+    try {
+      const info = await fetch(`/api/rooms/${currentRoomId}/info`);
+      // mode is in security_flags; get it via authenticated endpoint
+      // We'll just default to UI reflecting stored flag from profile list endpoint
+    } catch(_) {}
+  }
+
+  window.setMode = async (mode) => {
+    if (!currentRoomId) { showToast('Select a room first','error'); return; }
+    try {
+      await api.post(`/guest-face/${currentRoomId}/mode`, { biometric_mode: mode }, true);
+      // PATCH not yet in api helper — use fetch directly
+    } catch(_) {}
+    // Try PATCH
+    try {
+      const res = await fetch(`/api/guest-face/${currentRoomId}/mode`, {
+        method: 'PATCH',
+        headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${AppState.getToken()}` },
+        body: JSON.stringify({ biometric_mode: mode })
+      });
+      if (!res.ok) throw new Error();
+      currentMode = mode;
+      document.querySelectorAll('.mode-card').forEach(c => c.classList.toggle('active', c.dataset.mode === mode));
+      showToast(`Biometric mode set: ${mode.replace('_',' ')}`, 'success');
+    } catch(e) { showToast('Failed to update mode','error'); }
+  };
+
+  // ── Upload ──────────────────────────────────────────────────────────────────
+  function handleFiles(files) {
+    if (!currentRoomId) { showToast('Select a room first','error'); return; }
+    const valid = Array.from(files).filter(f => /\.(jpg|jpeg|png)$/i.test(f.name));
+    if (!valid.length) { showToast('No valid image files found','error'); return; }
+
+    const formData = new FormData();
+    valid.forEach(f => formData.append('images', f));
+
+    const progress = document.getElementById('progress-wrap');
+    const fill     = document.getElementById('progress-fill');
+    const summary  = document.getElementById('upload-summary');
+    const results  = document.getElementById('upload-results');
+
+    progress.style.display = 'block';
+    fill.style.width = '0%';
+    summary.style.display = 'none';
+    results.style.display = 'none';
+    results.innerHTML = '';
+
+    showToast(`Processing ${valid.length} image(s) with AI...`, 'info');
+
+    // Animate progress while uploading
+    let prog = 0;
+    const ticker = setInterval(() => { prog = Math.min(prog + 3, 85); fill.style.width = prog + '%'; }, 120);
+
+    fetch(`/api/guest-face/${currentRoomId}/upload`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${AppState.getToken()}` },
+      body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+      clearInterval(ticker);
+      fill.style.width = '100%';
+      setTimeout(() => { progress.style.display = 'none'; fill.style.width = '0%'; }, 800);
+
+      const { added, results: rows } = data;
+      summary.style.display = 'block';
+      summary.innerHTML = `<span style="color:var(--accent-success);font-weight:700;">✓ ${added} face(s) added</span> from ${valid.length} image(s).`;
+
+      if (rows?.length) {
+        results.style.display = 'block';
+        results.innerHTML = rows.map(r => {
+          const cls  = r.status === 'success' ? 'r-ok' : r.status === 'skipped' ? 'r-skip' : 'r-fail';
+          const icon = r.status === 'success' ? '✅' : r.status === 'skipped' ? '⏭' : '❌';
+          const info = r.status === 'success'
+            ? `${r.faces_detected} face(s) detected`
+            : r.reason || '';
+          return `<div class="result-row">
+            <span class="r-icon">${icon}</span>
+            <span class="r-file">${r.filename}</span>
+            <span class="r-status ${cls}">${info}</span>
+          </div>`;
+        }).join('');
+      }
+      loadProfiles();
+      showToast(`${added} biometric profile(s) stored`, 'success');
+    })
+    .catch(() => {
+      clearInterval(ticker);
+      progress.style.display = 'none';
+      showToast('Upload failed. Please try again.', 'error');
+    });
+  }
+
+  // File input
+  document.getElementById('file-input').addEventListener('change', e => handleFiles(e.target.files));
+  document.getElementById('folder-input').addEventListener('change', e => handleFiles(e.target.files));
+
+  // Drag & drop
+  const dz = document.getElementById('drop-zone');
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('drag-over');
+    handleFiles(e.dataTransfer.files);
+  });
+
+  // ── Load Profiles ───────────────────────────────────────────────────────────
+  async function loadProfiles() {
+    const grid = document.getElementById('profiles-grid');
+    const count = document.getElementById('profile-count');
+    try {
+      const profiles = await api.get(`/guest-face/${currentRoomId}/profiles`);
+      count.textContent = `(${profiles.length})`;
+      if (!profiles.length) {
+        grid.innerHTML = '<div class="empty-profiles">No profiles uploaded yet. Upload images above to get started.</div>';
+        return;
+      }
+      grid.innerHTML = profiles.map(p => `
+        <div class="profile-card" id="pc-${p.id}">
+          ${p.has_thumbnail
+            ? `<img class="profile-thumb" src="/api/guest-face/${currentRoomId}/thumbnail/${p.id}" alt="${p.label}" loading="lazy">`
+            : `<div class="profile-thumb-placeholder">👤</div>`}
+          <div class="profile-label" title="${p.label}">${p.label || 'Unknown'}</div>
+          <button class="profile-delete" title="Remove" onclick="deleteProfile('${p.id}')">✕</button>
+        </div>`).join('');
+    } catch(e) { grid.innerHTML = '<div class="empty-profiles" style="color:var(--accent-danger);">Failed to load profiles.</div>'; }
+  }
+
+  window.deleteProfile = async (profileId) => {
+    if (!confirm('Remove this biometric profile?')) return;
+    try {
+      const res = await fetch(`/api/guest-face/${currentRoomId}/profiles/${profileId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${AppState.getToken()}` }
+      });
+      if (!res.ok) throw new Error();
+      document.getElementById(`pc-${profileId}`)?.remove();
+      showToast('Profile removed', 'success');
+      const count = document.getElementById('profile-count');
+      const cur = parseInt(count.textContent.replace(/\D/g,'')) || 1;
+      count.textContent = `(${cur - 1})`;
+    } catch(e) { showToast('Failed to delete profile','error'); }
+  };
+
+  document.getElementById('clear-all-btn').addEventListener('click', async () => {
+    if (!currentRoomId) return;
+    if (!confirm('Permanently delete ALL biometric profiles for this room?')) return;
+    try {
+      const res = await fetch(`/api/guest-face/${currentRoomId}/profiles`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${AppState.getToken()}` }
+      });
+      if (!res.ok) throw new Error();
+      showToast('All profiles cleared', 'success');
+      loadProfiles();
+    } catch(e) { showToast('Failed to clear profiles','error'); }
+  });
+
+  // ── Verification Logs ───────────────────────────────────────────────────────
+  window.loadLogs = async function() {
+    const tbody = document.getElementById('logs-body');
+    if (!currentRoomId) return;
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-secondary);padding:1rem;">Loading...</td></tr>';
+    try {
+      const logs = await api.get(`/guest-face/${currentRoomId}/logs`);
+      if (!logs.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-secondary);padding:1rem;">No verification attempts yet.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = logs.map(l => {
+        const alertDot = l.alert_type
+          ? `<span class="alert-indicator ${l.alert_type === 'unknown_face' ? 'alert-red' : l.alert_type === 'multiple_faces' ? 'alert-purple' : 'alert-amber'}"></span>${l.alert_type.replace(/_/g,' ')}`
+          : '—';
+        const resCls = l.result === 'matched' ? 'badge-match' : l.result === 'no_face' ? 'badge-noface' : l.result === 'multiple_faces' ? 'badge-multi' : 'badge-nomatch';
+        const conf = l.confidence != null ? Math.round(l.confidence*100)+'%' : '—';
+        const ts   = new Date(l.timestamp).toLocaleString();
+        return `<tr>
+          <td>${alertDot}</td>
+          <td><span class="badge-sm ${resCls}">${l.result}</span></td>
+          <td>${conf}</td>
+          <td style="color:var(--text-secondary);font-size:0.78rem;">${l.matched_profile_id ? '✓ Found' : '—'}</td>
+          <td style="color:var(--text-secondary);font-size:0.75rem;">${ts}</td>
+        </tr>`;
+      }).join('');
+    } catch(e) { tbody.innerHTML = '<tr><td colspan="5" style="color:var(--accent-danger);text-align:center;padding:1rem;">Failed to load logs.</td></tr>'; }
+  };
+
+  loadRooms();
+</script>
+</body>
+</html>

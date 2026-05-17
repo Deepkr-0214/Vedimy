@@ -1,0 +1,47 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+backend/venv/
+
+# Local databases and runtime files
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+backend/instance/
+instance/
+
+# Logs
+*.log
+backend/server.out.log
+backend/server.err.log
+
+# Generated uploads/reports/screenshots
+backend/static/screenshots/
+backend/static/reports/
+backend/static/uploads/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vedimy - AI Teaching Studio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles/globals.css">
+  <link rel="stylesheet" href="../styles/components.css">
+  <link rel="stylesheet" href="../styles/layout.css">
+  <link rel="stylesheet" href="../styles/pages/ai-teaching.css">
+
+</head>
+<body>
+  <div id="navbar-root"></div>
+  <main class="main-layout">
+    <div class="ai-layout">
+      <h1 style="margin-bottom:2rem;">🧠 AI Teaching Studio</h1>
+
+      <!-- Step 1: Input Lecture -->
+      <div class="glass-card ai-section" id="recorder-section">
+        <h2>🎙 Lecture Input</h2>
+        <textarea id="transcript-area" placeholder="Paste your lecture text or transcript here..."></textarea>
+        <div class="row-gap">
+          <button class="btn-primary" id="save-lecture-btn">💾 Save & Analyze</button>
+          <span class="word-count" id="word-count">0 words</span>
+        </div>
+      </div>
+
+      <!-- OR: Upload PDF -->
+      <div class="glass-card ai-section" id="pdf-section">
+        <h2>📄 Or Upload PDF</h2>
+        <div id="drop-zone" class="drop-zone">
+          <div style="font-size:2rem;margin-bottom:0.5rem;">📎</div>
+          <p>Drag &amp; drop PDF here, or <label for="pdf-input" style="color:var(--accent-primary);cursor:pointer;">browse</label></p>
+          <input type="file" id="pdf-input" accept=".pdf" hidden>
+          <p id="pdf-filename" style="margin-top:0.5rem;font-size:0.85rem;"></p>
+        </div>
+        <button class="btn-primary" id="process-pdf-btn" disabled style="margin-top:1rem;">⚙️ Extract Text</button>
+      </div>
+
+      <!-- Step 2: Summary -->
+      <div class="glass-card ai-section" id="summary-section" style="display:none;">
+        <h2>📝 AI Summary</h2>
+        <div id="summary-loading" class="skeleton-loader" style="display:none;"></div>
+        <div id="summary-content" style="margin-bottom:1rem;line-height:1.7;"></div>
+        <div id="key-points-list" style="margin-bottom:1rem;"></div>
+        <div id="topics-chips"></div>
+      </div>
+
+      <!-- Step 3: Translation -->
+      <div class="glass-card ai-section" id="translation-section" style="display:none;">
+        <h2>🌐 Translate Content</h2>
+        <div id="language-pills" class="pill-group"></div>
+        <div id="translated-content" style="display:none;"></div>
+      </div>
+
+      <!-- Step 4: Exam Generator -->
+      <div class="glass-card ai-section" id="exam-section" style="display:none;">
+        <h2>📋 Generate Exam Questions</h2>
+        <div style="margin-bottom:1rem;">
+          <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:0.5rem;">Number of Questions</p>
+          <div class="pill-group" id="count-pills">
+            <button class="pill active" data-val="5">5</button>
+            <button class="pill" data-val="10">10</button>
+            <button class="pill" data-val="15">15</button>
+            <button class="pill" data-val="20">20</button>
+          </div>
+          <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:0.5rem;">Type</p>
+          <div class="pill-group" id="type-pills">
+            <button class="pill active" data-val="mcq">MCQ</button>
+            <button class="pill" data-val="short_answer">Short Answer</button>
+            <button class="pill" data-val="mixed">Mixed</button>
+          </div>
+          <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:0.5rem;">Difficulty</p>
+          <div class="pill-group" id="diff-pills">
+            <button class="pill active" data-val="easy">Easy</button>
+            <button class="pill" data-val="medium">Medium</button>
+            <button class="pill" data-val="hard">Hard</button>
+          </div>
+        </div>
+        <button class="btn-primary" id="generate-btn">✨ Generate Questions</button>
+        <div id="questions-preview" style="margin-top:1.5rem;"></div>
+        <div class="row-gap" id="export-row" style="display:none;margin-top:1rem;">
+          <button class="btn-outline" id="export-btn">📥 Export Questions</button>
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-left:auto;">
+            <select id="exam-select" style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:0.5rem;color:white;"></select>
+            <button class="btn-primary" id="attach-exam-btn">📎 Attach to Exam</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast-container"></div>
+  <script type="module" src="../js/core/state.js"></script>
+  <script type="module" src="../js/core/api.js"></script>
+  <script type="module" src="../js/components/navbar.js"></script>
+  <script type="module" src="../js/components/toast.js"></script>
+  <script type="module" src="../js/pages/ai-teaching.js"></script>
+</body>
+</html>

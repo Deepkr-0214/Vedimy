@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vedimy - Coordinator Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles/globals.css">
+  <link rel="stylesheet" href="../styles/components.css">
+  <link rel="stylesheet" href="../styles/layout.css">
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="../styles/pages/coordinator.css">
+
+</head>
+<body>
+  <div id="navbar-root"></div>
+  <main class="main-layout" style="padding-top:60px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1.5rem;background:var(--bg-secondary);border-bottom:1px solid var(--border);">
+      <div>
+        <h2 id="exam-title" style="font-size:1.1rem;">Coordinator Dashboard</h2>
+        <div style="font-size:0.8rem;color:var(--text-secondary);" id="exam-status">Select an exam to monitor</div>
+      </div>
+      <select id="exam-select" style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.75rem;color:white;min-width:200px;"></select>
+    </div>
+    <div class="coord-layout">
+      <!-- Left: Candidate list -->
+      <div class="coord-panel">
+        <div class="panel-header">
+          Candidates
+          <span id="active-count" style="color:var(--accent-success);font-size:0.82rem;"></span>
+        </div>
+        <div id="candidates-list"></div>
+      </div>
+
+      <!-- Center: Selected student + violations -->
+      <div class="center-panel">
+        <div class="selected-view" id="selected-view">
+          <div style="text-align:center;color:var(--text-secondary);">
+            <div style="font-size:3rem;margin-bottom:0.5rem;">👈</div>
+            <p>Select a candidate to view details</p>
+          </div>
+        </div>
+        <div class="violation-feed">
+          <div style="font-size:0.85rem;font-weight:600;margin-bottom:0.5rem;">Recent Violations</div>
+          <div id="violation-feed"></div>
+        </div>
+      </div>
+
+      <!-- Right: Actions + Stats + Live Participants -->
+      <div class="coord-panel" style="border-right:none;border-left:1px solid var(--border);">
+        <!-- Right-panel tabs -->
+        <div class="rtab-group">
+          <button class="rtab-btn active" id="rtab-stats"   onclick="switchRTab('stats')">📊 Stats</button>
+          <button class="rtab-btn"        id="rtab-live"    onclick="switchRTab('live')">👥 Live</button>
+          <button class="rtab-btn"        id="rtab-alerts"  onclick="switchRTab('alerts')">🔔 Alerts</button>
+        </div>
+
+        <!-- Tab: Stats & Actions -->
+        <div class="rtab-panel active" id="rpanel-stats">
+          <div class="action-panel">
+            <div class="stat-card">
+              <div style="font-size:0.75rem;color:var(--text-secondary);">ACTIVE CANDIDATES</div>
+              <div class="stat-val" id="stat-active">—</div>
+            </div>
+            <div class="stat-card">
+              <div style="font-size:0.75rem;color:var(--text-secondary);">TOTAL VIOLATIONS</div>
+              <div class="stat-val" id="stat-violations" style="color:var(--accent-warning);">—</div>
+            </div>
+            <div class="stat-card">
+              <div style="font-size:0.75rem;color:var(--text-secondary);">REMOVED</div>
+              <div class="stat-val" id="stat-removed" style="color:var(--accent-danger);">—</div>
+            </div>
+            <hr style="border:none;border-top:1px solid var(--border);">
+            <div style="font-size:0.82rem;font-weight:600;color:var(--text-secondary);">SELECTED: <span id="selected-name-label" style="color:var(--text-primary);">—</span></div>
+            <button class="action-btn warn"   id="action-warn">⚠️ Send Warning</button>
+            <button class="action-btn remove" id="action-remove">🚫 Remove Candidate</button>
+            <button class="action-btn remove" id="action-block" style="background:var(--accent-danger);color:white;">🛑 Block Candidate</button>
+            <hr style="border:none;border-top:1px solid var(--border);">
+            <button class="action-btn submit-all" id="action-auto-submit-all">🔴 Force Auto-Submit All</button>
+          </div>
+        </div>
+
+        <!-- Tab: Live Joined Participants -->
+        <div class="rtab-panel" id="rpanel-live">
+          <div style="padding:0.75rem 1.25rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:0.82rem;font-weight:600;">Currently in Room</span>
+            <button onclick="refreshLive()" style="background:transparent;border:none;color:var(--accent-primary);cursor:pointer;font-size:0.8rem;">↻ Refresh</button>
+          </div>
+          <div id="live-participants-list" style="padding:0.5rem 1rem;">
+            <div style="color:var(--text-secondary);font-size:0.82rem;padding:0.5rem 0;">Select an exam to see live participants</div>
+          </div>
+        </div>
+
+        <!-- Tab: Alerts (name changes, violations) -->
+        <div class="rtab-panel" id="rpanel-alerts">
+          <div style="padding:0.75rem 1.25rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:0.82rem;font-weight:600;">Activity Alerts</span>
+            <button onclick="clearAlerts()" style="background:transparent;border:none;color:var(--text-secondary);cursor:pointer;font-size:0.8rem;">Clear</button>
+          </div>
+          <div id="alerts-feed" style="padding:0.75rem;max-height:calc(100vh - 200px);overflow-y:auto;">
+            <div style="color:var(--text-secondary);font-size:0.82rem;">No alerts yet</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast-container"></div>
+  <script type="module" src="../js/core/state.js"></script>
+  <script type="module" src="../js/core/api.js"></script>
+  <script type="module" src="../js/components/navbar.js"></script>
+  <script type="module" src="../js/components/toast.js"></script>
+  <script type="module" src="../js/pages/coordinator.js"></script>
+  <script>
+    /* Right-panel tab switcher (non-module so it is globally accessible) */
+    function switchRTab(tab) {
+      document.querySelectorAll('.rtab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.rtab-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('rtab-' + tab).classList.add('active');
+      document.getElementById('rpanel-' + tab).classList.add('active');
+    }
+
+    function refreshLive() {
+      // delegate to module via custom event
+      window.dispatchEvent(new CustomEvent('coord:refresh-live'));
+    }
+
+    function clearAlerts() {
+      const feed = document.getElementById('alerts-feed');
+      feed.innerHTML = '<div style="color:var(--text-secondary);font-size:0.82rem;">No alerts yet</div>';
+    }
+
+    /* Helper called from coordinator.js to push name-change alerts */
+    window.pushNameChangeAlert = function(oldName, newName, email, time) {
+      const feed = document.getElementById('alerts-feed');
+      if (feed.querySelector('[data-no-alerts]')) feed.innerHTML = '';
+      const el = document.createElement('div');
+      el.className = 'name-change-alert';
+      el.innerHTML = `
+        <div class="nc-tag">✏️ Name Changed</div>
+        <div style="margin-top:4px;"><strong>${oldName}</strong> → <strong>${newName}</strong></div>
+        <div style="color:var(--text-secondary);font-size:0.75rem;margin-top:2px;">${email} &nbsp;·&nbsp; ${new Date(time||Date.now()).toLocaleTimeString()}</div>
+      `;
+      feed.prepend(el);
+      // Switch to alerts tab
+      switchRTab('alerts');
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vedimy – Guest Registration Manager</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles/globals.css">
+  <link rel="stylesheet" href="../styles/components.css">
+  <link rel="stylesheet" href="../styles/layout.css">
+  <style>
+    .content-area { padding: 2rem; }
+    .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; flex-wrap:wrap; gap:1rem; }
+    .room-selector { background:var(--bg-secondary); border:1px solid var(--border); border-radius:10px; padding:0.7rem 1rem; color:var(--text-primary); font-family:'DM Sans',sans-serif; font-size:0.9rem; min-width:260px; }
+    .link-box { background:var(--bg-secondary); border:1px solid var(--border); border-radius:12px; padding:1.25rem; margin-bottom:1.5rem; display:flex; align-items:center; gap:1rem; flex-wrap:wrap; }
+    .link-url { flex:1; font-family:monospace; font-size:0.8rem; color:var(--accent-primary); word-break:break-all; background:rgba(59,130,246,0.07); padding:0.5rem 0.75rem; border-radius:8px; }
+    .link-actions { display:flex; gap:0.5rem; flex-shrink:0; }
+    .action-btn { padding:0.45rem 0.9rem; border:none; border-radius:8px; cursor:pointer; font-size:0.82rem; font-weight:600; font-family:'DM Sans',sans-serif; transition:opacity 0.2s; }
+    .action-btn:hover { opacity:0.85; }
+    .btn-copy   { background:rgba(59,130,246,0.15); color:var(--accent-primary); border:1px solid rgba(59,130,246,0.3); }
+    .btn-regen  { background:rgba(245,158,11,0.12); color:var(--accent-warning); border:1px solid rgba(245,158,11,0.3); }
+    .btn-gen    { background:linear-gradient(135deg,#3B82F6,#06B6D4); color:#fff; }
+    .btn-danger { background:rgba(239,68,68,0.12); color:var(--accent-danger); border:1px solid rgba(239,68,68,0.25); }
+    .stats-row  { display:flex; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+    .stat-chip  { background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:0.75rem 1.25rem; display:flex; align-items:center; gap:0.6rem; font-size:0.85rem; }
+    .stat-chip span { font-weight:700; font-size:1.1rem; }
+    .table-wrap { background:var(--bg-card); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+    table { width:100%; border-collapse:collapse; }
+    th { padding:0.85rem 1rem; text-align:left; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-secondary); background:rgba(255,255,255,0.03); border-bottom:1px solid var(--border); }
+    td { padding:0.85rem 1rem; border-bottom:1px solid rgba(59,130,246,0.07); font-size:0.875rem; vertical-align:middle; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:rgba(255,255,255,0.02); }
+    .face-thumb { width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid var(--accent-success); }
+    .face-placeholder { width:44px; height:44px; border-radius:50%; background:var(--bg-secondary); display:flex; align-items:center; justify-content:center; font-size:1.2rem; border:2px solid var(--border); }
+    .badge-status { display:inline-flex; align-items:center; gap:0.3rem; padding:0.25rem 0.6rem; border-radius:20px; font-size:0.75rem; font-weight:700; }
+    .status-encoded { background:rgba(16,185,129,0.12); color:var(--accent-success); }
+    .status-failed  { background:rgba(239,68,68,0.12);  color:var(--accent-danger); }
+    .status-pending { background:rgba(245,158,11,0.12); color:var(--accent-warning); }
+    .empty-state { padding:3rem; text-align:center; color:var(--text-secondary); }
+    .empty-state .empty-icon { font-size:3rem; margin-bottom:1rem; }
+    #toast { position:fixed; bottom:1.5rem; right:1.5rem; background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:0.75rem 1.25rem; font-size:0.875rem; display:none; z-index:9999; box-shadow:0 8px 24px rgba(0,0,0,0.3); }
+    .no-room-msg { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:2rem; text-align:center; color:var(--text-secondary); }
+  </style>
+</head>
+<body>
+<div class="sidebar-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="nav-brand" style="font-size:1.5rem;color:var(--accent-primary);">Vedimy</div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="/pages/dashboard.html" class="sidebar-link"><span>📊</span> Dashboard</a>
+      <a href="/pages/security-activity.html" class="sidebar-link"><span>🛡</span> Security &amp; Activity</a>
+      <a href="/pages/learning-hub.html" class="sidebar-link"><span>📚</span> Learning Hub</a>
+      <a href="/pages/ai-teaching.html" class="sidebar-link"><span>🧠</span> AI Studio</a>
+      <a href="/pages/analytics.html" class="sidebar-link"><span>📈</span> Analytics &amp; Reports</a>
+      <a href="/pages/storage.html" class="sidebar-link"><span>☁️</span> Cloud Storage</a>
+      <a href="/pages/biometric-manager.html" class="sidebar-link"><span>🔐</span> Biometric Manager</a>
+      <a href="/pages/guest-reg-manager.html" class="sidebar-link active"><span>📋</span> Guest Forms</a>
+      <a href="/pages/coordinator.html" class="sidebar-link"><span>👁</span> Monitor Exams</a>
+    </nav>
+    <div style="padding:1rem;">
+      <button id="logout-btn" class="sidebar-link" style="width:100%;border:none;background:transparent;cursor:pointer;color:var(--accent-danger);"><span>🚪</span> Logout</button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="top-header">
+      <h2 style="font-size:1.2rem;">📋 Guest Registration Forms</h2>
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <select id="room-select" class="room-selector">
+          <option value="">— Select a Room —</option>
+        </select>
+      </div>
+    </header>
+
+    <div class="content-area">
+      <!-- No room selected -->
+      <div id="no-room-panel" class="no-room-msg">
+        <div style="font-size:2.5rem;margin-bottom:1rem;">📋</div>
+        <h3 style="margin-bottom:0.5rem;">Select a Room</h3>
+        <p style="font-size:0.875rem;">Choose one of your rooms from the dropdown above to manage its guest registration form.</p>
+      </div>
+
+      <!-- Room panel -->
+      <div id="room-panel" style="display:none;">
+
+        <!-- Form link section -->
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;">
+            <h3 style="font-size:1rem;font-weight:700;">🔗 Shareable Registration Form Link</h3>
+            <div style="display:flex;gap:0.5rem;">
+              <button class="action-btn btn-gen" id="gen-link-btn" onclick="generateLink(false)">✨ Generate Link</button>
+              <button class="action-btn btn-regen" id="regen-link-btn" style="display:none;" onclick="generateLink(true)">🔄 Regenerate</button>
+            </div>
+          </div>
+
+          <div id="link-panel" style="display:none;">
+            <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:0.75rem;">
+              Share this link with guests <em>before</em> the session. They fill in their details and upload a face photo — which gets automatically encoded for biometric verification.
+            </p>
+            <div class="link-box">
+              <div class="link-url" id="form-link-url">—</div>
+              <div class="link-actions">
+                <button class="action-btn btn-copy" onclick="copyLink()">📋 Copy</button>
+                <a id="open-link-btn" href="#" target="_blank" class="action-btn" style="background:rgba(16,185,129,0.12);color:var(--accent-success);border:1px solid rgba(16,185,129,0.25);text-decoration:none;">↗ Open</a>
+              </div>
+            </div>
+            <p style="font-size:0.77rem;color:var(--text-secondary);">
+              ⚠️ Regenerating the link will invalidate the old one. Guests who already submitted keep their biometric data.
+            </p>
+          </div>
+
+          <div id="no-link-panel">
+            <p style="font-size:0.875rem;color:var(--text-secondary);">No registration form has been generated yet for this room. Click <strong style="color:var(--text-primary);">Generate Link</strong> to create one.</p>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-row" id="stats-row" style="display:none;">
+          <div class="stat-chip"><span id="stat-total">0</span> Total Submissions</div>
+          <div class="stat-chip" style="color:var(--accent-success)"><span id="stat-encoded">0</span> ✅ Biometric Encoded</div>
+          <div class="stat-chip" style="color:var(--accent-danger)"><span id="stat-failed">0</span> ❌ Face Failed</div>
+        </div>
+
+        <!-- Submissions table -->
+        <div id="submissions-wrap" style="display:none;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+            <h3 style="font-size:1rem;font-weight:700;">👥 Guest Submissions</h3>
+            <button class="action-btn btn-copy" onclick="loadSubmissions()">🔄 Refresh</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Face</th>
+                  <th>Name</th>
+                  <th>Contact</th>
+                  <th>Address</th>
+                  <th>Status</th>
+                  <th>Submitted</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="sub-tbody">
+                <tr><td colspan="7" style="padding:2rem;text-align:center;color:var(--text-secondary);">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="empty-submissions" style="display:none;" class="empty-state">
+          <div class="empty-icon">📭</div>
+          <h3 style="margin-bottom:0.5rem;">No Submissions Yet</h3>
+          <p>Share the registration link with your guests. Their submissions will appear here once they fill in the form.</p>
+        </div>
+
+      </div><!-- room-panel -->
+    </div>
+  </main>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script type="module">
+  import { AppState } from '../js/core/state.js';
+  import { api } from '../js/core/api.js';
+
+  if (!AppState.getToken()) { window.location.href = '/pages/login.html'; }
+  const user = AppState.getUser();
+  if (!user || user.role !== 'host') { window.location.href = '/pages/dashboard.html'; }
+
+  document.getElementById('logout-btn').addEventListener('click', () => {
+    AppState.clearAuth(); window.location.href = '/pages/login.html';
+  });
+
+  let currentRoomId = null;
+  let currentToken  = null;
+
+  // Load rooms into dropdown
+  async function loadRooms() {
+    try {
+      const rooms = await api.get('/rooms/my');
+      const sel = document.getElementById('room-select');
+      rooms.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r.id;
+        opt.textContent = `${r.title} (${r.room_code}) — ${r.room_type}`;
+        sel.appendChild(opt);
+      });
+      // Auto-select from URL param
+      const p = new URLSearchParams(location.search).get('room');
+      if (p) { sel.value = p; sel.dispatchEvent(new Event('change')); }
+    } catch(e) {}
+  }
+  loadRooms();
+
+  document.getElementById('room-select').addEventListener('change', async function() {
+    currentRoomId = this.value;
+    if (!currentRoomId) {
+      document.getElementById('no-room-panel').style.display = 'block';
+      document.getElementById('room-panel').style.display = 'none';
+      return;
+    }
+    document.getElementById('no-room-panel').style.display = 'none';
+    document.getElementById('room-panel').style.display = 'block';
+    await checkExistingForm();
+    await loadSubmissions();
+  });
+
+  async function checkExistingForm() {
+    try {
+      const data = await api.get(`/guest-reg/${currentRoomId}/active-form`);
+      if (data.exists) {
+        currentToken = data.token;
+        showLink(data.token);
+        document.getElementById('gen-link-btn').style.display = 'none';
+        document.getElementById('regen-link-btn').style.display = '';
+      } else {
+        currentToken = null;
+        document.getElementById('link-panel').style.display = 'none';
+        document.getElementById('no-link-panel').style.display = 'block';
+        document.getElementById('gen-link-btn').style.display = '';
+        document.getElementById('regen-link-btn').style.display = 'none';
+      }
+    } catch(e) {}
+  }
+
+  window.generateLink = async function(regenerate = false) {
+    if (!currentRoomId) return;
+    try {
+      const data = await api.post(`/guest-reg/${currentRoomId}/generate-link`, { regenerate });
+      currentToken = data.token;
+      showLink(data.token);
+      document.getElementById('gen-link-btn').style.display = 'none';
+      document.getElementById('regen-link-btn').style.display = '';
+      toast('Registration link generated!', 'success');
+    } catch(e) { toast('Failed to generate link', 'error'); }
+  };
+
+  function showLink(token) {
+    const url = `${location.origin}/pages/guest-register.html?token=${token}`;
+    document.getElementById('form-link-url').textContent = url;
+    document.getElementById('open-link-btn').href = url;
+    document.getElementById('link-panel').style.display = 'block';
+    document.getElementById('no-link-panel').style.display = 'none';
+    window._currentFormLink = url;
+  }
+
+  window.copyLink = function() {
+    if (!window._currentFormLink) return;
+    navigator.clipboard.writeText(window._currentFormLink).then(() => toast('Link copied!', 'success')).catch(() => {
+      prompt('Copy this link:', window._currentFormLink);
+    });
+  };
+
+  window.loadSubmissions = async function() {
+    if (!currentRoomId) return;
+    const tbody = document.getElementById('sub-tbody');
+    tbody.innerHTML = '<tr><td colspan="7" style="padding:2rem;text-align:center;color:var(--text-secondary);">Loading…</td></tr>';
+
+    try {
+      const subs = await api.get(`/guest-reg/${currentRoomId}/submissions`);
+
+      const statsRow = document.getElementById('stats-row');
+      const wrap     = document.getElementById('submissions-wrap');
+      const empty    = document.getElementById('empty-submissions');
+
+      if (subs.length === 0) {
+        statsRow.style.display = 'none'; wrap.style.display = 'none'; empty.style.display = 'block'; return;
+      }
+
+      statsRow.style.display = 'flex'; wrap.style.display = 'block'; empty.style.display = 'none';
+
+      const encoded = subs.filter(s => s.face_status === 'encoded').length;
+      const failed  = subs.filter(s => s.face_status === 'failed').length;
+      document.getElementById('stat-total').textContent   = subs.length;
+      document.getElementById('stat-encoded').textContent = encoded;
+      document.getElementById('stat-failed').textContent  = failed;
+
+      const token = AppState.getToken();
+      tbody.innerHTML = subs.map(s => {
+        const thumbSrc = s.has_thumbnail
+          ? `/api/guest-reg/${currentRoomId}/submission/${s.id}/thumbnail`
+          : null;
+        const thumbHtml = thumbSrc
+          ? `<img src="${thumbSrc}" class="face-thumb" style="Authorization:Bearer ${token}" onerror="this.parentElement.innerHTML='<div class=face-placeholder>👤</div>'">`
+          : `<div class="face-placeholder">👤</div>`;
+
+        const statusMap = { encoded:'✅ Encoded', failed:'❌ Failed', pending:'⏳ Pending' };
+        const statusClass = { encoded:'status-encoded', failed:'status-failed', pending:'status-pending' };
+        const statusHtml = `<span class="badge-status ${statusClass[s.face_status]||'status-pending'}">${statusMap[s.face_status]||s.face_status}</span>`;
+        if (s.face_status === 'failed' && s.face_error_msg) {
+          // status + tooltip
+        }
+
+        const date = s.submitted_at ? new Date(s.submitted_at).toLocaleString(undefined,{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '—';
+        const addr = s.address ? (s.address.length > 30 ? s.address.slice(0,30)+'…' : s.address) : '—';
+
+        return `<tr>
+          <td>${thumbHtml}</td>
+          <td style="font-weight:600;">${s.guest_name}</td>
+          <td style="color:var(--text-secondary);">${s.contact_number || '—'}</td>
+          <td style="color:var(--text-secondary);font-size:0.82rem;" title="${s.address||''}">${addr}</td>
+          <td>${statusHtml}${s.face_error_msg?`<div style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.2rem;">${s.face_error_msg}</div>`:''}</td>
+          <td style="color:var(--text-secondary);font-size:0.82rem;">${date}</td>
+          <td><button class="action-btn btn-danger" onclick="deleteSubmission('${s.id}')">🗑 Delete</button></td>
+        </tr>`;
+      }).join('');
+
+      // Load thumbnails with auth header
+      document.querySelectorAll('.face-thumb').forEach(img => {
+        const src = img.src;
+        fetch(src, { headers:{ Authorization:`Bearer ${token}` } })
+          .then(r => r.blob()).then(b => { img.src = URL.createObjectURL(b); }).catch(() => {});
+      });
+
+    } catch(e) {
+      tbody.innerHTML = '<tr><td colspan="7" style="padding:1rem;text-align:center;color:var(--accent-danger);">Failed to load submissions.</td></tr>';
+    }
+  };
+
+  window.deleteSubmission = async function(subId) {
+    if (!confirm('Delete this submission? The linked biometric profile will also be removed.')) return;
+    try {
+      await api.delete(`/guest-reg/${currentRoomId}/submissions/${subId}`);
+      toast('Submission deleted', 'success');
+      loadSubmissions();
+    } catch(e) { toast('Failed to delete', 'error'); }
+  };
+
+  function toast(msg, type='success') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.style.display = 'block';
+    el.style.borderColor = type==='success' ? 'var(--accent-success)' : 'var(--accent-danger)';
+    el.style.color = type==='success' ? 'var(--accent-success)' : 'var(--accent-danger)';
+    setTimeout(() => { el.style.display = 'none'; }, 2800);
+  }
+</script>
+</body>
+</html>

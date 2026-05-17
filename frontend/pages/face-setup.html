@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vedimy - Face Registration Setup</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles/globals.css">
+  <link rel="stylesheet" href="../styles/components.css">
+  <style>
+    body { background: var(--bg-primary); display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+    .setup-container { text-align: center; max-width: 500px; width: 100%; padding: 2rem; }
+    .setup-header h1 { font-family: 'Syne', sans-serif; font-size: 2rem; margin-bottom: 0.5rem; color: var(--accent-primary); }
+    .setup-header p { color: var(--text-secondary); margin-bottom: 2rem; font-size: 1rem; }
+    .video-wrapper { position: relative; width: 100%; aspect-ratio: 4/3; border-radius: 16px; overflow: hidden; background: #000; border: 2px solid var(--border); margin-bottom: 2rem; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+    video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+    .overlay { position: absolute; inset: 0; border: 4px solid transparent; border-radius: 16px; transition: border-color 0.3s; pointer-events: none; }
+    .overlay.scanning { border-color: var(--accent-primary); box-shadow: inset 0 0 20px rgba(59,130,246,0.5); }
+    .overlay.success { border-color: var(--accent-success); box-shadow: inset 0 0 20px rgba(16,185,129,0.5); }
+    .overlay.error { border-color: var(--accent-danger); box-shadow: inset 0 0 20px rgba(239,68,68,0.5); }
+    .btn-register { width: 100%; padding: 1rem; font-size: 1.1rem; border-radius: 12px; }
+  </style>
+</head>
+<body>
+  <div class="setup-container">
+    <div class="setup-header">
+      <h1>Secure Your Account</h1>
+      <p>Please register your face biometrics. This ensures a secure and seamless experience during your meetings and exams.</p>
+    </div>
+    
+    <div class="video-wrapper" id="video-wrapper">
+      <video id="webcam" autoplay playsinline muted></video>
+      <div class="overlay" id="video-overlay"></div>
+      <img id="preview-img" style="display:none; width:100%; height:100%; object-fit:cover;" />
+    </div>
+    
+    <div style="display:flex; gap:1rem; flex-direction:column;">
+      <button class="btn-primary btn-register" id="register-btn">Capture & Register Face</button>
+      
+      <div style="display:flex; align-items:center; gap:1rem; width:100%;">
+        <hr style="flex:1; border-color:var(--border);"><span style="color:var(--text-secondary);font-size:0.9rem;">OR</span><hr style="flex:1; border-color:var(--border);">
+      </div>
+
+      <input type="file" id="file-upload" accept="image/*" style="display:none;" />
+      <button class="btn-primary btn-register" id="upload-btn" style="background:transparent; border:1px solid var(--border); color:var(--text-primary);">Upload / Take Photo from Device</button>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script type="module">
+    import { AppState } from '../js/core/state.js';
+    import { api } from '../js/core/api.js';
+    import { showToast } from '../js/components/toast.js';
+
+    if (!AppState.getToken()) window.location.href = '/pages/login.html';
+    
+    if (AppState.getUser()?.face_registered) {
+      window.location.href = '/pages/dashboard.html';
+    }
+
+    const video = document.getElementById('webcam');
+    const previewImg = document.getElementById('preview-img');
+    const registerBtn = document.getElementById('register-btn');
+    const uploadBtn = document.getElementById('upload-btn');
+    const fileUpload = document.getElementById('file-upload');
+    const overlay = document.getElementById('video-overlay');
+    let stream = null;
+    let uploadedBase64 = null;
+
+    async function startCamera() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+      } catch (e) {
+        showToast('Webcam access failed. You can still upload a photo.', 'warning');
+        registerBtn.disabled = true;
+      }
+    }
+
+    function captureFrame() {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      const ctx = canvas.getContext('2d');
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      return canvas.toDataURL('image/jpeg', 0.8);
+    }
+
+    uploadBtn.addEventListener('click', () => fileUpload.click());
+
+    fileUpload.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        uploadedBase64 = event.target.result;
+        video.style.display = 'none';
+        previewImg.style.display = 'block';
+        previewImg.src = uploadedBase64;
+        
+        // Auto-trigger registration when image is loaded
+        registerBtn.disabled = false;
+        registerBtn.textContent = 'Register Uploaded Photo';
+        registerBtn.style.background = 'var(--accent-primary)';
+      };
+      reader.readAsDataURL(file);
+    });
+
+    registerBtn.addEventListener('click', async () => {
+      registerBtn.disabled = true;
+      registerBtn.textContent = 'Scanning Face...';
+      overlay.className = 'overlay scanning';
+
+      const base64Image = uploadedBase64 || captureFrame();
+
+      try {
+        await api.post('/face/register', { image: base64Image });
+        
+        overlay.className = 'overlay success';
+        registerBtn.textContent = 'Registration Successful!';
+        registerBtn.style.background = 'var(--accent-success)';
+        
+        const user = AppState.getUser();
+        user.face_registered = true;
+        AppState.setAuth(user, AppState.getToken());
+
+        showToast('Face registered successfully!', 'success');
+        
+        setTimeout(() => {
+          stream?.getTracks().forEach(t => t.stop());
+          window.location.href = '/pages/dashboard.html';
+        }, 1500);
+
+      } catch (err) {
+        overlay.className = 'overlay error';
+        registerBtn.disabled = false;
+        registerBtn.textContent = uploadedBase64 ? 'Register Uploaded Photo' : 'Try Again';
+        showToast(err.message || 'Registration failed. Ensure face is clearly visible.', 'error');
+      }
+    });
+
+    startCamera();
+  </script>
+</body>
+</html>

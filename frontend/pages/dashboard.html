@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vedimy - Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles/globals.css">
+  <link rel="stylesheet" href="../styles/components.css">
+  <link rel="stylesheet" href="../styles/layout.css">
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <link rel="stylesheet" href="../styles/pages/dashboard.css">
+  <link rel="stylesheet" href="../styles/chatbot.css">
+</head>
+<body>
+  <div class="sidebar-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="nav-brand" style="font-size:1.5rem;color:var(--accent-primary);">Vedimy</div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/pages/dashboard.html" class="sidebar-link active">
+          <span>📊</span> Dashboard
+        </a>
+        <a href="/pages/security-activity.html" class="sidebar-link">
+          <span>🛡</span> Security & Activity
+        </a>
+        <a href="/pages/learning-hub.html" class="sidebar-link">
+          <span>📚</span> Learning Hub
+        </a>
+        <a href="#" class="sidebar-link" id="link-my-rooms" style="display:none;">
+          <span>🎥</span> My Rooms
+        </a>
+        <a href="/pages/ai-teaching.html" class="sidebar-link" id="link-ai-studio" style="display:none;">
+          <span>🧠</span> AI Studio
+        </a>
+        <a href="/pages/analytics.html" class="sidebar-link" id="link-analytics" style="display:none;">
+          <span>📈</span> Analytics & Reports
+        </a>
+        <a href="/pages/storage.html" class="sidebar-link" id="link-storage" style="display:none;">
+          <span>☁️</span> Cloud Storage
+        </a>
+        <a href="/pages/biometric-manager.html" class="sidebar-link" id="link-biometric" style="display:none;">
+          <span>🔐</span> Biometric Manager
+        </a>
+        <a href="/pages/guest-reg-manager.html" class="sidebar-link" id="link-guest-forms" style="display:none;">
+          <span>📋</span> Guest Forms
+        </a>
+        <a href="/pages/coordinator.html" class="sidebar-link" id="link-monitor" style="display:none;">
+          <span>👁</span> Monitor Exams
+        </a>
+      </nav>
+      <div style="padding: 1rem;">
+        <button id="privacy-btn" class="sidebar-link" style="width:100%; border:none; background:transparent; cursor:pointer;">
+          <span>🛡</span> Privacy Settings
+        </button>
+        <button id="logout-btn" class="sidebar-link" style="width:100%; border:none; background:transparent; cursor:pointer; color:var(--accent-danger);">
+          <span>🚪</span> Logout
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="top-header">
+        <div style="display:flex;align-items:center;gap:1rem;">
+          <button id="mobile-menu-btn" style="display:none;background:transparent;border:none;font-size:1.5rem;color:var(--text-primary);cursor:pointer;">☰</button>
+          <h2 style="font-size:1.2rem;">Dashboard</h2>
+        </div>
+        <div class="top-header-right">
+          <div style="display:flex;align-items:center;gap:0.5rem;background:var(--badge-bg);padding:0.25rem 0.75rem;border-radius:20px;font-size:0.85rem;color:var(--accent-success);">
+            <span style="width:8px;height:8px;background:var(--accent-success);border-radius:50%;display:inline-block;"></span> Active
+          </div>
+          <div style="position:relative;cursor:pointer;" id="notification-bell" onclick="document.getElementById('notif-dropdown').classList.toggle('show')">
+            🔔 <span id="notif-badge" style="display:none;position:absolute;top:-5px;right:-5px;background:var(--accent-danger);color:white;font-size:0.6rem;padding:2px 5px;border-radius:10px;">0</span>
+            <div id="notif-dropdown" style="display:none;position:absolute;top:30px;right:0;width:300px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:100;max-height:400px;overflow-y:auto;padding:0.5rem;">
+              <div style="font-weight:bold;margin-bottom:0.5rem;padding:0.5rem;border-bottom:1px solid var(--border);">Notifications</div>
+              <div id="notif-list" style="font-size:0.85rem;color:var(--text-secondary);">No new notifications</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;margin-left:1rem;">
+            <div style="width:32px;height:32px;border-radius:50%;background:var(--accent-primary);color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;" id="header-avatar">U</div>
+            <div>
+              <div style="font-size:0.9rem;font-weight:600;" id="header-name">User Name</div>
+              <div style="font-size:0.75rem;color:var(--text-secondary);" id="header-role">Role</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="content-area">
+        
+        <!-- Stats Row -->
+        <div class="ref-cards-grid">
+          <div class="ref-stat-card">
+            <div class="ref-stat-icon" style="background:var(--icon-blue-bg);color:var(--accent-primary);">🎥</div>
+            <div class="ref-stat-info">
+              <div class="ref-stat-label">My Rooms</div>
+              <div class="ref-stat-value" id="stat-rooms">0</div>
+            </div>
+          </div>
+          <div class="ref-stat-card">
+            <div class="ref-stat-icon" style="background:var(--icon-amber-bg);color:var(--accent-warning);">📝</div>
+            <div class="ref-stat-info">
+              <div class="ref-stat-label">Upcoming Exams</div>
+              <div class="ref-stat-value" id="stat-exams">0</div>
+            </div>
+          </div>
+          <div class="ref-stat-card">
+            <div class="ref-stat-icon" style="background:var(--icon-green-bg);color:var(--accent-success);">👤</div>
+            <div class="ref-stat-info">
+              <div class="ref-stat-label">Face Status</div>
+              <div class="ref-stat-value" id="stat-face" style="font-size:1.1rem;margin-top:0.3rem;">Registered</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+          <h3 style="font-size:1.1rem;font-weight:600;">Recent Rooms & Quick Actions</h3>
+          <button class="btn-primary" id="create-room-btn" style="display:none;padding:0.5rem 1rem;font-size:0.9rem;">+ Create Room</button>
+        </div>
+
+        <!-- Join Room Row -->
+        <div class="join-row" style="background:var(--bg-card);padding:1.5rem;border-radius:12px;border:1px solid var(--border);">
+          <input type="text" id="room-code-input" placeholder="Enter room code (VDM-XXXX)" maxlength="8">
+          <button class="btn-primary" id="join-room-btn">Join Room</button>
+        </div>
+
+        <!-- Rooms List -->
+        <div class="rooms-list" id="rooms-list" style="margin-top:2rem;">
+          <div style="color:var(--text-secondary);">Loading rooms...</div>
+        </div>
+
+        <!-- Past Attended Rooms (Guest) -->
+        <div id="past-rooms-section" style="display:none;margin-top:2.5rem;">
+          <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:1.5rem;">📚 My Past Classes & Study Materials</h3>
+          <div class="rooms-list" id="past-rooms-list">
+            <div style="color:var(--text-secondary);">Loading...</div>
+          </div>
+        </div>
+
+        <!-- Exam Results (Guest) -->
+        <div id="results-section" style="display:none;margin-top:2.5rem;">
+          <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:1.5rem;">📊 My Exam Results & Performance</h3>
+          <div id="results-list" style="display:flex;flex-direction:column;gap:0.75rem;">
+            <div style="color:var(--text-secondary);">Loading results...</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Create Room Modal -->
+  <div id="create-room-modal" style="display:none;position:fixed;inset:0;background:var(--overlay-bg, rgba(0,0,0,0.7));z-index:500;align-items:center;justify-content:center;">
+    <div class="glass-card" style="width:90%;max-width:420px;">
+      <h3 style="margin-bottom:1.5rem;">Create New Room</h3>
+      <div style="margin-bottom:1rem;">
+        <label style="display:block;margin-bottom:0.4rem;color:var(--text-secondary);font-size:0.875rem;">Room Title</label>
+        <input type="text" id="new-room-title" style="width:100%;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:0.75rem;color:white;" placeholder="My Meeting Room">
+      </div>
+      <div style="margin-bottom:1.5rem;">
+        <label style="display:block;margin-bottom:0.4rem;color:var(--text-secondary);font-size:0.875rem;">Room Type</label>
+        <select id="new-room-type" style="width:100%;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:0.75rem;color:white;">
+          <option value="meeting">Meeting</option>
+          <option value="exam">Exam</option>
+        </select>
+      </div>
+      <div id="exam-fields" style="display:none;margin-bottom:1.5rem;">
+        <div style="margin-bottom:1rem;">
+          <label style="display:block;margin-bottom:0.4rem;color:var(--text-secondary);font-size:0.875rem;">Duration (minutes)</label>
+          <input type="number" id="new-exam-duration" style="width:100%;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:0.75rem;color:white;" value="60" min="1">
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label style="display:block;margin-bottom:0.4rem;color:var(--text-secondary);font-size:0.875rem;">Instructions (Optional)</label>
+          <textarea id="new-exam-instructions" style="width:100%;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:0.75rem;color:white;resize:vertical;" rows="3" placeholder="No calculators allowed..."></textarea>
+        </div>
+      </div>
+      <div style="margin-bottom:1.5rem;">
+        <label style="display:flex;align-items:center;gap:0.5rem;color:var(--text-secondary);font-size:0.875rem;cursor:pointer;">
+          <input type="checkbox" id="new-room-waiting" style="width:1.2rem;height:1.2rem;">
+          Enable Waiting Room
+        </label>
+      </div>
+      <details style="margin-bottom:1.5rem;background:var(--bg-secondary);padding:0.75rem;border-radius:8px;border:1px solid var(--border);">
+        <summary style="cursor:pointer;font-weight:600;font-size:0.9rem;">🔒 Advanced Security Settings</summary>
+        <div style="margin-top:0.75rem;display:flex;flex-direction:column;gap:0.5rem;">
+          <label style="display:flex;align-items:center;gap:0.5rem;color:var(--text-secondary);font-size:0.875rem;cursor:pointer;">
+            <input type="checkbox" id="sec-face-auth" style="width:1.2rem;height:1.2rem;"> Require Face Verification
+          </label>
+          <label style="display:flex;align-items:center;gap:0.5rem;color:var(--text-secondary);font-size:0.875rem;cursor:pointer;">
+            <input type="checkbox" id="sec-liveness" style="width:1.2rem;height:1.2rem;"> Strict Liveness Detection
+          </label>
+          <label style="display:flex;align-items:center;gap:0.5rem;color:var(--text-secondary);font-size:0.875rem;cursor:pointer;">
+            <input type="checkbox" id="sec-secure-mode" style="width:1.2rem;height:1.2rem;"> Secure Browser Mode (Anti-cheat)
+          </label>
+        </div>
+      </details>
+      <div style="display:flex;gap:0.75rem;">
+        <button class="btn-primary" id="confirm-create-room" style="flex:1;">Create</button>
+        <button id="cancel-create-room" style="flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;cursor:pointer;color:white;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Attendance Modal -->
+  <div id="attendance-modal" style="display:none;position:fixed;inset:0;background:var(--overlay-bg, rgba(0,0,0,0.7));z-index:500;align-items:center;justify-content:center;">
+    <div class="glass-card" style="width:90%;max-width:750px;max-height:85vh;display:flex;flex-direction:column;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <h3 style="margin:0;">Attendance & Participants</h3>
+        <button id="close-attendance-modal" style="background:transparent;border:none;color:white;font-size:1.2rem;cursor:pointer;">&times;</button>
+      </div>
+      <!-- Tabs -->
+      <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:1rem;">
+        <button id="atab-history" onclick="switchAttTab('history')" style="flex:1;padding:0.55rem;border:none;background:transparent;color:var(--accent-primary);font-weight:600;font-size:0.88rem;border-bottom:2px solid var(--accent-primary);cursor:pointer;">📋 Full Log</button>
+        <button id="atab-live" onclick="switchAttTab('live')" style="flex:1;padding:0.55rem;border:none;background:transparent;color:var(--text-secondary);font-weight:600;font-size:0.88rem;border-bottom:2px solid transparent;cursor:pointer;">🟢 Live Now</button>
+      </div>
+      <!-- Full log tab -->
+      <div id="apanel-history" style="overflow-y:auto;flex:1;background:var(--bg-secondary);border-radius:8px;border:1px solid var(--border);">
+        <table style="width:100%;border-collapse:collapse;text-align:left;">
+          <thead style="background:rgba(255,255,255,0.05);">
+            <tr>
+              <th style="padding:0.85rem 1rem;border-bottom:1px solid var(--border);">Name</th>
+              <th style="padding:0.85rem 1rem;border-bottom:1px solid var(--border);">Email</th>
+              <th style="padding:0.85rem 1rem;border-bottom:1px solid var(--border);">Join Time</th>
+              <th style="padding:0.85rem 1rem;border-bottom:1px solid var(--border);">Leave Time</th>
+              <th style="padding:0.85rem 1rem;border-bottom:1px solid var(--border);">Duration</th>
+              <th style="padding:0.85rem 1rem;border-bottom:1px solid var(--border);">Face ✓</th>
+            </tr>
+          </thead>
+          <tbody id="attendance-list">
+            <tr><td colspan="6" style="padding:1rem;text-align:center;color:var(--text-secondary);">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Live now tab -->
+      <div id="apanel-live" style="display:none;overflow-y:auto;flex:1;">
+        <div id="live-now-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.75rem;padding:0.5rem 0;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Privacy Modal -->
+  <div id="privacy-modal" style="display:none;position:fixed;inset:0;background:var(--overlay-bg, rgba(0,0,0,0.7));z-index:500;align-items:center;justify-content:center;">
+    <div class="glass-card" style="width:90%;max-width:420px;border:1px solid var(--accent-danger);">
+      <h3 style="margin-bottom:1rem;color:var(--accent-danger);">Privacy Settings</h3>
+      <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.5rem;line-height:1.5;">
+        You can permanently delete your biometric face encoding from our servers. 
+        <strong style="color:white;">Warning:</strong> If you delete this data, you will not be able to enter any classes or exams until you re-register.
+      </p>
+      <div style="display:flex;gap:0.75rem;flex-direction:column;">
+        <button id="confirm-delete-face" style="background:var(--accent-danger);color:white;border:none;padding:0.8rem;border-radius:8px;font-weight:bold;cursor:pointer;">Permanently Delete Biometric Data</button>
+        <button id="cancel-privacy" style="background:transparent;border:1px solid var(--border);color:white;padding:0.8rem;border-radius:8px;cursor:pointer;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Study Materials Modal -->
+  <div id="materials-modal" style="display:none;position:fixed;inset:0;background:var(--overlay-bg, rgba(0,0,0,0.7));z-index:500;align-items:center;justify-content:center;">
+    <div class="glass-card" style="width:90%;max-width:750px;max-height:85vh;overflow-y:auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+        <h3 style="margin:0;">Study Materials</h3>
+        <button onclick="document.getElementById('materials-modal').style.display='none'" style="background:transparent;border:none;color:white;font-size:1.2rem;cursor:pointer;">&times;</button>
+      </div>
+      
+      <div id="materials-loading" style="display:none;color:var(--text-secondary);">Loading...</div>
+      
+      <div id="materials-content" style="display:none;">
+        <div id="materials-recording-section" style="margin-bottom:1.5rem;display:none;">
+          <h4 style="margin-bottom:0.75rem;font-size:0.95rem;">📁 Shared Files & Recordings</h4>
+          <div id="materials-files-list" style="display:flex;flex-direction:column;gap:0.5rem;"></div>
+        </div>
+
+        <div id="materials-ai-section" style="display:none;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+            <h4 style="margin:0;font-size:0.95rem;">🧠 AI Lecture Summary</h4>
+            <div style="display:flex;gap:0.5rem;">
+              <select id="materials-lang-select" style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;padding:0.3rem;color:white;font-size:0.8rem;"></select>
+              <button id="materials-translate-btn" style="background:var(--icon-blue-bg);color:var(--accent-primary);border:none;border-radius:6px;padding:0.3rem 0.75rem;cursor:pointer;font-size:0.8rem;">Translate</button>
+            </div>
+          </div>
+          <div id="materials-summary-box" style="background:var(--bg-secondary);border-radius:8px;padding:1rem;font-size:0.9rem;line-height:1.6;margin-bottom:1rem;white-space:pre-wrap;"></div>
+          <div id="materials-keypoints-box" style="background:var(--bg-secondary);border-radius:8px;padding:1rem;font-size:0.9rem;line-height:1.6;"></div>
+        </div>
+        
+        <div id="materials-empty" style="display:none;color:var(--text-secondary);text-align:center;padding:2rem;">
+          No study materials or recordings available for this class yet.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Share Materials Modal -->
+  <div id="share-modal" style="display:none;position:fixed;inset:0;background:var(--overlay-bg, rgba(0,0,0,0.7));z-index:500;align-items:center;justify-content:center;">
+    <div class="glass-card" style="width:90%;max-width:520px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <h3 style="margin:0;">📎 Share Study Materials</h3>
+        <button onclick="document.getElementById('share-modal').style.display='none'" style="background:transparent;border:none;color:white;font-size:1.2rem;cursor:pointer;">&times;</button>
+      </div>
+      <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:1rem;">Select files from Cloud Storage to share with class attendees (PDFs, notes, recordings).</p>
+      <div id="share-files-checklist" style="max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:0.5rem;background:var(--bg-secondary);border-radius:8px;padding:0.75rem;margin-bottom:1.25rem;">
+        <div style="color:var(--text-secondary);font-size:0.85rem;">Loading files...</div>
+      </div>
+      <div style="display:flex;gap:0.75rem;">
+        <button id="confirm-share-btn" class="btn-primary" style="flex:1;">✅ Share Selected</button>
+        <button onclick="document.getElementById('share-modal').style.display='none'" style="flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;cursor:pointer;color:white;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+  <script type="module">
+    import { AppState } from '../js/core/state.js';
+    import { api } from '../js/core/api.js';
+    import { showToast } from '../js/components/toast.js';
+
+    if (!AppState.getToken()) window.location.href = '/pages/login.html';
+
+    const user = AppState.getUser();
+    
+    // Force onboarding if face not registered
+    if (user && !user.face_registered) {
+      window.location.href = '/pages/face-setup.html';
+    }
+    
+    // Header UI
+    document.getElementById('header-name').textContent = user?.name || 'User';
+    document.getElementById('header-role').textContent = (user?.role || 'guest').toUpperCase();
+    document.getElementById('header-avatar').textContent = (user?.name || 'U').charAt(0).toUpperCase();
+    
+    // Face Status
+    const faceStatus = document.getElementById('stat-face');
+    faceStatus.textContent = user?.face_registered ? 'Registered' : 'Action Required';
+    faceStatus.style.color = user?.face_registered ? 'var(--accent-success)' : 'var(--accent-danger)';
+
+    // Host Restrictions
+    if (user?.role === 'host') {
+      document.getElementById('create-room-btn').style.display = 'block';
+      document.getElementById('link-my-rooms').style.display = 'flex';
+      document.getElementById('link-ai-studio').style.display = 'flex';
+      document.getElementById('link-analytics').style.display = 'flex';
+      document.getElementById('link-storage').style.display = 'flex';
+      document.getElementById('link-biometric').style.display = 'flex';
+      document.getElementById('link-guest-forms').style.display = 'flex';
+      document.getElementById('link-monitor').style.display = 'flex';
+    }
+
+    // Mobile Menu
+    if (window.innerWidth <= 768) {
+      document.getElementById('mobile-menu-btn').style.display = 'block';
+    }
+    document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('open');
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      AppState.clearAuth();
+      window.location.href = '/pages/login.html';
+    });
+
+    // Privacy Logic
+    const privacyModal = document.getElementById('privacy-modal');
+    document.getElementById('privacy-btn').addEventListener('click', () => privacyModal.style.display = 'flex');
+    document.getElementById('cancel-privacy').addEventListener('click', () => privacyModal.style.display = 'none');
+    document.getElementById('confirm-delete-face').addEventListener('click', async () => {
+      try {
+        await api.delete('/face/delete');
+        showToast('Biometric data deleted permanently.', 'success');
+        
+        // Update local state
+        const currentUser = AppState.getUser();
+        currentUser.face_registered = false;
+        AppState.setAuth(currentUser, AppState.getToken());
+        
+        setTimeout(() => window.location.href = '/pages/face-setup.html', 1500);
+      } catch (e) {
+        showToast('Error deleting data: ' + e.message, 'error');
+      }
+    });
+
+    async function loadRooms() {
+      try {
+        const rooms = await api.get('/rooms/my');
+        document.getElementById('stat-rooms').textContent = rooms.length;
+        const list = document.getElementById('rooms-list');
+        if (!rooms.length) { list.innerHTML = '<div style="color:var(--text-secondary);background:var(--bg-card);padding:1.5rem;border-radius:12px;border:1px solid var(--border);">No rooms yet</div>'; return; }
+        list.innerHTML = rooms.map(r => {
+          let statusBadgeClass = 'badge-meeting';
+          if(r.status === 'active') statusBadgeClass = 'badge-active';
+          if(r.status === 'paused') statusBadgeClass = 'badge-exam';
+          if(r.status === 'ended') statusBadgeClass = 'badge-exam';
+          
+          let actionBtns = '';
+          if (r.status === 'scheduled' || r.status === 'paused') {
+            actionBtns += `<button class="btn-primary" style="font-size:0.8rem;padding:0.35rem 0.85rem;" onclick="changeRoomState('${r.id}', 'active')">Start</button>`;
+          } else if (r.status === 'active') {
+            actionBtns += `<button style="background:var(--icon-amber-bg);color:var(--accent-warning);border:none;border-radius:6px;padding:0.35rem 0.85rem;cursor:pointer;" onclick="changeRoomState('${r.id}', 'paused')">Pause</button>`;
+            actionBtns += `<button style="background:var(--icon-red-bg);color:var(--accent-danger);border:none;border-radius:6px;padding:0.35rem 0.85rem;cursor:pointer;margin-left:0.5rem;" onclick="changeRoomState('${r.id}', 'ended')">End</button>`;
+          }
+
+          return `
+          <div class="room-card">
+            <div class="room-card-header">
+              <div>
+                <h3>${r.title}</h3>
+                <div class="room-code">${r.room_code}</div>
+              </div>
+              <div>
+                <span class="badge badge-${r.room_type}">${r.room_type}</span>
+                <span class="badge ${statusBadgeClass}" style="margin-left:0.25rem;">${r.status}</span>
+              </div>
+            </div>
+            <div class="room-actions" style="margin-top:0.5rem; border-top:1px solid var(--border); padding-top:0.5rem;">
+              ${actionBtns}
+            </div>
+            <div class="room-actions">
+              <button class="btn-primary" style="font-size:0.8rem;padding:0.35rem 0.85rem;" onclick="window.location.href='/pages/face-auth.html?code=${r.room_code}'">Enter Room</button>
+              ${r.room_type === 'exam' ? `<button style="background:var(--icon-red-bg);color:var(--accent-danger);border-radius:6px;border:none;cursor:pointer;padding:0.35rem 0.85rem;font-size:0.8rem;" onclick="window.location.href='/pages/face-auth.html?code=${r.room_code}&exam=true'">Exam View</button>` : ''}
+              <button style="background:var(--icon-green-bg);color:var(--accent-success);border-radius:6px;border:none;cursor:pointer;padding:0.35rem 0.85rem;font-size:0.8rem;" onclick="copyInviteLink('${r.room_code}')">📋 Copy Link</button>
+              <button style="background:rgba(139,92,246,0.15);color:#a78bfa;border-radius:6px;border:none;cursor:pointer;padding:0.35rem 0.85rem;font-size:0.8rem;" onclick="window.location.href='/pages/biometric-manager.html?room=${r.id}'">🔐 Biometrics</button>
+              <button style="background:rgba(16,185,129,0.12);color:var(--accent-success);border-radius:6px;border:none;cursor:pointer;padding:0.35rem 0.85rem;font-size:0.8rem;" onclick="window.location.href='/pages/guest-reg-manager.html?room=${r.id}'">📋 Form</button>
+              <button style="background:var(--icon-blue-bg);color:var(--accent-primary);border-radius:6px;border:none;cursor:pointer;padding:0.35rem 0.85rem;font-size:0.8rem;" onclick="window.viewAttendance('${r.id}')">Reports</button>
+              ${r.status === 'ended' ? `<button style="background:var(--icon-amber-bg);color:var(--accent-warning);border-radius:6px;border:none;cursor:pointer;padding:0.35rem 0.85rem;font-size:0.8rem;" onclick="openShareModal('${r.id}')">🎥 Share Rec</button>` : ''}
+            </div>
+          </div>
+        `}).join('');
+      } catch(e) { document.getElementById('rooms-list').innerHTML = '<div style="color:var(--accent-danger);">Failed to load rooms</div>'; }
+    }
+
+    window.changeRoomState = async (roomId, newStatus) => {
+      try {
+        await api.post(`/rooms/${roomId}/state`, { status: newStatus });
+        showToast(`Room is now ${newStatus}`, 'success');
+        // Feature 23: Notify guests when room goes live
+        if (newStatus === 'active' && window._hostSocket) {
+          const rooms = await api.get('/rooms/my');
+          const room = rooms.find(r => r.id === roomId);
+          if (room) {
+            window._hostSocket.emit('room_started', {
+              room_code: room.room_code,
+              title: room.title,
+              room_type: room.room_type
+            });
+          }
+        }
+        loadRooms();
+      } catch(e) {
+        showToast('Failed to update state: ' + e.message, 'error');
+      }
+    };
+
+    window.viewAttendance = async (roomId) => {
+      const modal = document.getElementById('attendance-modal');
+      const list = document.getElementById('attendance-list');
+      modal.style.display = 'flex';
+      list.innerHTML = '<tr><td colspan="5" style="padding:1rem;text-align:center;color:var(--text-secondary);">Loading...</td></tr>';
+      
+      try {
+        const records = await api.get(`/rooms/${roomId}/attendance`);
+        if (records.length === 0) {
+          list.innerHTML = '<tr><td colspan="5" style="padding:1rem;text-align:center;color:var(--text-secondary);">No attendance records found.</td></tr>';
+          return;
+        }
+        
+        list.innerHTML = records.map(r => {
+          const joinT = r.join_time ? new Date(r.join_time).toLocaleTimeString() : 'N/A';
+          const leaveT = r.leave_time ? new Date(r.leave_time).toLocaleTimeString() : 'Active';
+          const dur = r.duration_seconds > 0 ? Math.round(r.duration_seconds / 60) + ' min' : (r.leave_time ? '<1 min' : '-');
+          const faceIcon = r.face_check_passed === true ? '<span style="color:var(--accent-success);">✅</span>'
+                         : r.face_check_passed === false ? '<span style="color:var(--accent-danger);">❌</span>'
+                         : '<span style="color:var(--text-secondary);">—</span>';
+          return `
+            <tr>
+              <td style="padding:0.85rem 1rem;border-bottom:1px solid var(--border);">${r.name}</td>
+              <td style="padding:0.85rem 1rem;border-bottom:1px solid var(--border);color:var(--text-secondary);">${r.email}</td>
+              <td style="padding:0.85rem 1rem;border-bottom:1px solid var(--border);">${joinT}</td>
+              <td style="padding:0.85rem 1rem;border-bottom:1px solid var(--border);">${leaveT}</td>
+              <td style="padding:0.85rem 1rem;border-bottom:1px solid var(--border);">${dur}</td>
+              <td style="padding:0.85rem 1rem;border-bottom:1px solid var(--border);text-align:center;">${faceIcon}</td>
+            </tr>
+          `;
+        }).join('');
+      } catch(e) {
+        list.innerHTML = `<tr><td colspan="6" style="padding:1rem;text-align:center;color:var(--accent-danger);">Failed to load attendance.</td></tr>`;
+      }
+    };
+
+    // Live participants tab loader
+    let _currentAttRoomId = null;
+    async function loadLiveNow(roomId) {
+      const panel = document.getElementById('live-now-list');
+      panel.innerHTML = '<div style="color:var(--text-secondary);font-size:0.85rem;">Loading...</div>';
+      try {
+        const participants = await api.get(`/rooms/${roomId}/participants/live`);
+        if (!participants.length) {
+          panel.innerHTML = '<div style="color:var(--text-secondary);font-size:0.85rem;">No one is currently in the room.</div>';
+          return;
+        }
+        panel.innerHTML = participants.map(p => {
+          const joinT = p.join_time ? new Date(p.join_time).toLocaleTimeString() : '—';
+          const faceIcon = p.face_check_passed === true ? '✅' : p.face_check_passed === false ? '❌' : '—';
+          return `
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:1rem;">
+              <div style="font-weight:600;margin-bottom:0.25rem;">${p.name}</div>
+              <div style="color:var(--text-secondary);font-size:0.8rem;">${p.email}</div>
+              <div style="margin-top:0.5rem;display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:0.75rem;color:var(--text-secondary);">Joined: ${joinT}</span>
+                <span title="Face verified">${faceIcon}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch(e) {
+        panel.innerHTML = '<div style="color:var(--accent-danger);font-size:0.85rem;">Failed to load live participants.</div>';
+      }
+    }
+
+    window.switchAttTab = (tab) => {
+      const isHistory = tab === 'history';
+      document.getElementById('apanel-history').style.display = isHistory ? 'block' : 'none';
+      document.getElementById('apanel-live').style.display   = isHistory ? 'none'  : 'block';
+      document.getElementById('atab-history').style.color = isHistory ? 'var(--accent-primary)' : 'var(--text-secondary)';
+      document.getElementById('atab-history').style.borderBottomColor = isHistory ? 'var(--accent-primary)' : 'transparent';
+      document.getElementById('atab-live').style.color = !isHistory ? 'var(--accent-primary)' : 'var(--text-secondary)';
+      document.getElementById('atab-live').style.borderBottomColor = !isHistory ? 'var(--accent-primary)' : 'transparent';
+      if (!isHistory && _currentAttRoomId) loadLiveNow(_currentAttRoomId);
+    };
+
+    // Patch viewAttendance to store roomId
+    const _origViewAttendance = window.viewAttendance;
+    window.viewAttendance = async (roomId) => {
+      _currentAttRoomId = roomId;
+      switchAttTab('history'); // default tab
+      await _origViewAttendance(roomId);
+    };
+    document.getElementById('close-attendance-modal').addEventListener('click', () => {
+      document.getElementById('attendance-modal').style.display = 'none';
+    });
+
+    async function loadExams() {
+      try {
+        const exams = await api.get('/exams/upcoming');
+        document.getElementById('stat-exams').textContent = exams.length;
+      } catch(e) {}
+    }
+
+    // Join room — route through dedicated join page
+    document.getElementById('join-room-btn').addEventListener('click', () => {
+      const code = document.getElementById('room-code-input').value.trim().toUpperCase();
+      if (!code) { showToast('Enter a room code', 'error'); return; }
+      window.location.href = `/pages/join.html?code=${code}`;
+    });
+
+    // Copy invitation link helper
+    window.copyInviteLink = (roomCode) => {
+      const link = `${window.location.origin}/pages/join.html?invite=${roomCode}`;
+      navigator.clipboard.writeText(link).then(() => {
+        showToast(`Invitation link copied! Share: ${roomCode}`, 'success');
+      }).catch(() => {
+        prompt('Copy this invitation link:', link);
+      });
+    };
+    document.getElementById('room-code-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('join-room-btn').click();
+    });
+
+    // Create room
+    const modal = document.getElementById('create-room-modal');
+    document.getElementById('create-room-btn').addEventListener('click', () => { modal.style.display = 'flex'; });
+    document.getElementById('cancel-create-room').addEventListener('click', () => { modal.style.display = 'none'; });
+    
+    document.getElementById('new-room-type').addEventListener('change', (e) => {
+      document.getElementById('exam-fields').style.display = e.target.value === 'exam' ? 'block' : 'none';
+    });
+
+    document.getElementById('confirm-create-room').addEventListener('click', async () => {
+      const title = document.getElementById('new-room-title').value.trim() || 'My Room';
+      const type = document.getElementById('new-room-type').value;
+      const waiting = document.getElementById('new-room-waiting').checked;
+      
+      const payload = { 
+        title, 
+        room_type: type, 
+        waiting_room_enabled: waiting,
+        security_flags: {
+          require_face_auth: document.getElementById('sec-face-auth').checked,
+          strict_liveness: document.getElementById('sec-liveness').checked,
+          secure_browser: document.getElementById('sec-secure-mode').checked
+        }
+      };
+      if (type === 'exam') {
+        payload.duration_minutes = parseInt(document.getElementById('new-exam-duration').value) || 60;
+        payload.instructions = document.getElementById('new-exam-instructions').value.trim();
+      }
+
+      try {
+        const res = await api.post('/rooms/create', payload);
+        showToast(`Room created: ${res.room_code}`, 'success');
+        modal.style.display = 'none';
+        loadRooms();
+        setTimeout(() => window.location.href = `/pages/face-auth.html?code=${res.room_code}`, 1000);
+      } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+    });
+
+    async function loadPastRooms() {
+      try {
+        const rooms = await api.get('/rooms/my-attended');
+        const list = document.getElementById('past-rooms-list');
+        const sec = document.getElementById('past-rooms-section');
+        if (rooms.length > 0) {
+          sec.style.display = 'block';
+          list.innerHTML = rooms.map(r => `
+            <div class="room-card">
+              <div class="room-card-header">
+                <div>
+                  <h3>${r.title}</h3>
+                  <div class="room-code">${r.room_code}</div>
+                </div>
+                <div><span class="badge badge-${r.room_type}">${r.room_type}</span></div>
+              </div>
+              <div class="room-actions" style="margin-top:1rem; border-top:1px solid var(--border); padding-top:0.75rem;">
+                <button class="btn-primary" style="font-size:0.8rem;padding:0.35rem 0.85rem;" onclick="openStudyMaterials('${r.id}')">📚 View Materials</button>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          list.innerHTML = '<div style="color:var(--text-secondary);">No past classes found.</div>';
+        }
+      } catch(e) {}
+    }
+
+    let currentMaterialRoomId = null;
+    let currentMaterials = null;
+    
+    window.openStudyMaterials = async (roomId) => {
+      currentMaterialRoomId = roomId;
+      const modal = document.getElementById('materials-modal');
+      modal.style.display = 'flex';
+      document.getElementById('materials-loading').style.display = 'block';
+      document.getElementById('materials-content').style.display = 'none';
+      document.getElementById('materials-empty').style.display = 'none';
+      
+      try {
+        const mat = await api.get(`/rooms/${roomId}/materials`);
+        currentMaterials = mat;
+        document.getElementById('materials-loading').style.display = 'none';
+        document.getElementById('materials-content').style.display = 'block';
+        
+        let hasContent = false;
+        
+        // Feature 21: Multi-file display
+        const sharedFiles = mat.shared_files || (mat.recording_file ? [mat.recording_file] : []);
+        if (sharedFiles.length > 0) {
+          hasContent = true;
+          document.getElementById('materials-recording-section').style.display = 'block';
+          const iconMap = { pdf: '📄', mp4: '🎥', webm: '🎥', mp3: '🎵', docx: '📝', jpg: '🖼️', png: '🖼️' };
+          document.getElementById('materials-files-list').innerHTML = sharedFiles.map(f => {
+            const ext = (f.filename || '').split('.').pop().toLowerCase();
+            const icon = iconMap[ext] || '📁';
+            const sizeStr = f.size > 1048576 ? (f.size/1048576).toFixed(1) + ' MB' : Math.round((f.size||0)/1024) + ' KB';
+            return `<div style="display:flex;align-items:center;gap:0.75rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:0.75rem;">
+              <span style="font-size:1.3rem;">${icon}</span>
+              <div style="flex:1;min-width:0;">
+                <div style="font-weight:600;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${f.filename}</div>
+                <div style="font-size:0.75rem;color:var(--text-secondary);">${sizeStr}</div>
+              </div>
+              <a href="/api/files/download/${f.id}" target="_blank" style="background:var(--accent-primary);color:white;border:none;border-radius:6px;padding:0.35rem 0.85rem;font-size:0.8rem;text-decoration:none;white-space:nowrap;">⬇ Download</a>
+            </div>`;
+          }).join('');
+        } else {
+          document.getElementById('materials-recording-section').style.display = 'none';
+        }
+        
+        if (mat.has_summary) {
+          hasContent = true;
+          document.getElementById('materials-ai-section').style.display = 'block';
+          document.getElementById('materials-summary-box').innerHTML = mat.summary;
+          
+          let kpStr = '';
+          try {
+             const kps = JSON.parse(mat.key_points);
+             if(Array.isArray(kps)) kpStr = '<ul style="margin:0;padding-left:1rem;">' + kps.map(k=>`<li>${k}</li>`).join('') + '</ul>';
+             else kpStr = mat.key_points;
+          } catch(e) { kpStr = mat.key_points; }
+          
+          document.getElementById('materials-keypoints-box').innerHTML = kpStr;
+          
+          if (document.getElementById('materials-lang-select').options.length === 0) {
+            const res = await api.get('/ai/languages');
+            const sel = document.getElementById('materials-lang-select');
+            for(const code in res.languages) {
+               sel.innerHTML += `<option value="${code}">${res.languages[code]}</option>`;
+            }
+          }
+        } else {
+          document.getElementById('materials-ai-section').style.display = 'none';
+        }
+        
+        if (!hasContent) {
+           document.getElementById('materials-content').style.display = 'none';
+           document.getElementById('materials-empty').style.display = 'block';
+        }
+      } catch(e) {
+        document.getElementById('materials-loading').style.display = 'none';
+        document.getElementById('materials-empty').style.display = 'block';
+      }
+    };
+
+    document.getElementById('materials-translate-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('materials-translate-btn');
+      const lang = document.getElementById('materials-lang-select').value;
+      if (!currentMaterials?.has_summary || !currentMaterials?.ai_lecture_id) return;
+      
+      btn.textContent = 'Translating...'; btn.disabled = true;
+      try {
+        const res = await api.post('/ai/translate', {
+           ai_lecture_id: currentMaterials.ai_lecture_id,
+           target_language: lang
+        });
+        document.getElementById('materials-summary-box').innerHTML = res.translated_summary;
+        
+        let kpStr = '';
+        try {
+           const kps = JSON.parse(res.translated_key_points);
+           if(Array.isArray(kps)) kpStr = '<ul style="margin:0;padding-left:1rem;">' + kps.map(k=>`<li>${k}</li>`).join('') + '</ul>';
+           else kpStr = res.translated_key_points;
+        } catch(e) { kpStr = res.translated_key_points; }
+        
+        document.getElementById('materials-keypoints-box').innerHTML = kpStr;
+        showToast(`Translated to ${res.language_name}`, 'success');
+      } catch(e) {
+        showToast('Translation failed', 'error');
+      } finally {
+        btn.textContent = 'Translate'; btn.disabled = false;
+      }
+    });
+
+    let currentShareRoomId = null;
+    window.openShareModal = async (roomId) => {
+      currentShareRoomId = roomId;
+      const modal = document.getElementById('share-modal');
+      const list = document.getElementById('share-files-checklist');
+      modal.style.display = 'flex';
+      list.innerHTML = '<div style="color:var(--text-secondary);font-size:0.85rem;">Loading files...</div>';
+      try {
+         const files = await api.get('/files/list');
+         if (!files.length) {
+           list.innerHTML = '<div style="color:var(--text-secondary);font-size:0.85rem;">No files uploaded. Go to Cloud Storage to upload files.</div>';
+           return;
+         }
+         // Fetch existing shared IDs to pre-check boxes
+         let existingIds = [];
+         try {
+           const mat = await api.get(`/rooms/${roomId}/materials`);
+           existingIds = (mat.shared_files || []).map(f => f.id);
+         } catch(e) {}
+         const iconMap = { pdf: '📄', mp4: '🎥', webm: '🎥', mp3: '🎵', docx: '📝', jpg: '🖼️', png: '🖼️' };
+         list.innerHTML = files.map(f => {
+           const ext = f.filename.split('.').pop().toLowerCase();
+           const icon = iconMap[ext] || '📁';
+           const sizeStr = f.file_size > 1048576 ? (f.file_size/1048576).toFixed(1) + ' MB' : Math.round(f.file_size/1024) + ' KB';
+           const checked = existingIds.includes(f.id) ? 'checked' : '';
+           return `<label style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem;border-radius:6px;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+             <input type="checkbox" value="${f.id}" ${checked} style="width:1.1rem;height:1.1rem;accent-color:var(--accent-primary);">
+             <span style="font-size:1.1rem;">${icon}</span>
+             <div style="flex:1;min-width:0;">
+               <div style="font-size:0.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${f.filename}</div>
+               <div style="font-size:0.75rem;color:var(--text-secondary);">${sizeStr}</div>
+             </div>
+           </label>`;
+         }).join('');
+      } catch(e) { list.innerHTML = '<div style="color:var(--accent-danger);font-size:0.85rem;">Failed to load files</div>'; }
+    };
+
+    document.getElementById('confirm-share-btn').addEventListener('click', async () => {
+       const checked = document.querySelectorAll('#share-files-checklist input[type=checkbox]:checked');
+       const fileIds = Array.from(checked).map(cb => cb.value);
+       try {
+         const res = await fetch(`/api/rooms/${currentShareRoomId}/share-materials`, {
+           method: 'PATCH',
+           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${AppState.getToken()}` },
+           body: JSON.stringify({ file_ids: fileIds })
+         });
+         if (!res.ok) throw new Error();
+         showToast(`✅ Shared ${fileIds.length} file(s) with attendees`, 'success');
+         document.getElementById('share-modal').style.display = 'none';
+       } catch(e) { showToast('Failed to share materials', 'error'); }
+    });
+
+    async function loadExamResults() {
+      try {
+        const results = await api.get('/exams/my-results');
+        const sec = document.getElementById('results-section');
+        const list = document.getElementById('results-list');
+        if (results.length > 0) {
+          sec.style.display = 'block';
+          list.innerHTML = results.map(r => {
+            const scoreColor = r.score === null ? 'var(--text-secondary)' : r.score >= 70 ? 'var(--accent-success)' : r.score >= 40 ? 'var(--accent-warning)' : 'var(--accent-danger)';
+            const scoreLabel = r.score === null ? 'Pending Review' : `${r.score}%`;
+            const gradeBadge = r.score === null ? '' : r.score >= 70 ? '🟢' : r.score >= 40 ? '🟡' : '🔴';
+            const date = r.submitted_at ? new Date(r.submitted_at).toLocaleDateString(undefined, { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) : 'N/A';
+            return `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:1rem;display:flex;align-items:center;gap:1rem;">
+              <div style="font-size:2rem;">📝</div>
+              <div style="flex:1;">
+                <div style="font-weight:600;font-size:0.95rem;">${r.exam_title}</div>
+                <div style="font-size:0.8rem;color:var(--text-secondary);">${r.room_title} · ${date}</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:1.4rem;font-weight:700;color:${scoreColor};font-family:'Syne',sans-serif;">${gradeBadge} ${scoreLabel}</div>
+                <div style="font-size:0.7rem;color:var(--text-secondary);">${r.score !== null ? 'Graded' : 'Ungraded'}</div>
+              </div>
+            </div>`;
+          }).join('');
+        }
+      } catch(e) {}
+    }
+
+    function initGuestNotificationSocket() {
+      const sock = io('/conference', {
+        auth: { token: AppState.getToken() },
+        transports: ['websocket'],
+        reconnection: true,
+        reconnectionAttempts: Infinity,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000
+      });
+      sock.on('connect', () => {
+        sock.emit('guest_dashboard_connect', { user_id: AppState.getUser()?.id });
+      });
+      // Feature 23: Session started notification
+      sock.on('session_started', ({ title, room_code, room_type, message }) => {
+        const badge = document.getElementById('notif-badge');
+        let count = parseInt(badge.textContent) || 0;
+        badge.textContent = count + 1;
+        badge.style.display = 'inline-block';
+        const notifList = document.getElementById('notif-list');
+        if (notifList.textContent === 'No new notifications') notifList.innerHTML = '';
+        const icon = room_type === 'exam' ? '📝' : '📡';
+        notifList.innerHTML = `<div style="padding:0.6rem 0.5rem;border-bottom:1px solid var(--border);border-left:3px solid var(--accent-success);padding-left:0.75rem;margin-bottom:0.25rem;">
+          <div style="font-size:0.78rem;color:var(--accent-success);font-weight:700;text-transform:uppercase;">${icon} Session Started</div>
+          <div style="margin-top:3px;font-size:0.85rem;">${title}</div>
+          <div style="font-size:0.75rem;color:var(--text-secondary);margin-top:2px;">Code: ${room_code}</div>
+        </div>` + notifList.innerHTML;
+        showToast(message, 'success');
+      });
+      // Feature 23: Materials shared notification
+      sock.on('materials_shared', ({ count }) => {
+        showToast(`📁 Host shared ${count} new study material(s)`, 'info');
+        const badge = document.getElementById('notif-badge');
+        let badgeCount = parseInt(badge.textContent) || 0;
+        badge.textContent = badgeCount + 1;
+        badge.style.display = 'inline-block';
+        const notifList = document.getElementById('notif-list');
+        if (notifList.textContent === 'No new notifications') notifList.innerHTML = '';
+        notifList.innerHTML = `<div style="padding:0.6rem 0.5rem;border-bottom:1px solid var(--border);border-left:3px solid var(--accent-primary);padding-left:0.75rem;margin-bottom:0.25rem;">
+          <div style="font-size:0.78rem;color:var(--accent-primary);font-weight:700;text-transform:uppercase;">📁 Materials Shared</div>
+          <div style="margin-top:3px;font-size:0.85rem;">Host shared ${count} new study material(s)</div>
+        </div>` + notifList.innerHTML;
+      });
+      // Feature 23: Quiz announcement
+      sock.on('launch_live_quiz', (data) => {
+        showToast('📊 Live quiz started — check your conference room!', 'warning');
+      });
+      // Feature 14 / 23: Violation warning notification (pushed from proctoring/coordinator)
+      sock.on('guest_violation_warning', ({ message }) => {
+        const badge = document.getElementById('notif-badge');
+        let badgeCount = parseInt(badge.textContent) || 0;
+        badge.textContent = badgeCount + 1;
+        badge.style.display = 'inline-block';
+        const notifList = document.getElementById('notif-list');
+        if (notifList.textContent === 'No new notifications') notifList.innerHTML = '';
+        notifList.innerHTML = `<div style="padding:0.6rem 0.5rem;border-bottom:1px solid var(--border);border-left:3px solid var(--accent-danger);padding-left:0.75rem;margin-bottom:0.25rem;">
+          <div style="font-size:0.78rem;color:var(--accent-danger);font-weight:700;text-transform:uppercase;">⚠️ Exam Warning</div>
+          <div style="margin-top:3px;font-size:0.85rem;">${message}</div>
+          <div style="font-size:0.75rem;color:var(--text-secondary);margin-top:2px;">${new Date().toLocaleTimeString()}</div>
+        </div>` + notifList.innerHTML;
+        showToast(`⚠️ Warning: ${message}`, 'error');
+      });
+    }
+    
+    async function fetchNotifications() {
+      try {
+        const notifs = await api.get('/notifications/');
+        if (!notifs || notifs.length === 0) return;
+        
+        const badge = document.getElementById('notif-badge');
+        badge.textContent = notifs.length;
+        badge.style.display = 'inline-block';
+        
+        const list = document.getElementById('notif-list');
+        list.innerHTML = '';
+        
+        notifs.forEach(n => {
+          let icon = '🔔';
+          let color = 'var(--accent-primary)';
+          if (n.type === 'info') { icon = 'ℹ️'; color = 'var(--accent-primary)'; }
+          else if (n.type === 'warning') { icon = '⚠️'; color = 'var(--accent-warning)'; }
+          else if (n.type === 'success') { icon = '✅'; color = 'var(--accent-success)'; }
+          else if (n.type === 'error') { icon = '🚨'; color = 'var(--accent-danger)'; }
+          
+          const t = new Date(n.created_at).toLocaleString();
+          
+          list.innerHTML += `
+            <div style="padding:0.6rem 0.5rem;border-bottom:1px solid var(--border);border-left:3px solid ${color};padding-left:0.75rem;margin-bottom:0.25rem;">
+              <div style="font-size:0.78rem;color:${color};font-weight:700;text-transform:uppercase;">${icon} ${n.title}</div>
+              <div style="margin-top:3px;font-size:0.85rem;">${n.message}</div>
+              <div style="font-size:0.75rem;color:var(--text-secondary);margin-top:2px;">${t}</div>
+            </div>`;
+        });
+      } catch (e) {
+        console.error('Failed to fetch notifications', e);
+      }
+    }
+
+    document.getElementById('notification-bell').addEventListener('click', async () => {
+      const badge = document.getElementById('notif-badge');
+      if (badge.style.display !== 'none') {
+        try {
+          await api.post('/notifications/mark-read');
+          badge.style.display = 'none';
+          badge.textContent = '0';
+        } catch (e) {}
+      }
+    });
+
+    loadRooms();
+    loadExams();
+    if (AppState.getUser()?.role !== 'host') {
+       loadPastRooms();
+       loadExamResults();
+       initGuestNotificationSocket();
+    }
+    
+    fetchNotifications();
+
+    if (AppState.getUser()?.role === 'host') {
+      const socket = io('/conference', { auth: { token: AppState.getToken() }, transports: ['websocket'] });
+      window._hostSocket = socket;
+      socket.on('connect', () => {
+        socket.emit('host_dashboard_connect', { user_id: AppState.getUser().id });
+      });
+      socket.on('host_notification', (data) => {
+        const badge = document.getElementById('notif-badge');
+        let count = parseInt(badge.textContent) || 0;
+        badge.textContent = count + 1;
+        badge.style.display = 'inline-block';
+        
+        const list = document.getElementById('notif-list');
+        if (list.textContent === 'No new notifications') list.innerHTML = '';
+        list.innerHTML = `<div style="padding:0.5rem 0;border-bottom:1px solid var(--border);">${data.message}</div>` + list.innerHTML;
+        showToast(data.message, 'info');
+      });
+
+      // ── Name change alerts (Feature 8) ──────────────────────────────────────
+      socket.on('name_change_alert', ({ old_name, new_name, email, time }) => {
+        const badge = document.getElementById('notif-badge');
+        let count = parseInt(badge.textContent) || 0;
+        badge.textContent = count + 1;
+        badge.style.display = 'inline-block';
+
+        const list = document.getElementById('notif-list');
+        if (list.textContent === 'No new notifications') list.innerHTML = '';
+
+        const t = time ? new Date(time).toLocaleTimeString() : new Date().toLocaleTimeString();
+        list.innerHTML = `
+          <div style="padding:0.6rem 0.5rem;border-bottom:1px solid var(--border);border-left:3px solid var(--accent-warning);padding-left:0.75rem;margin-bottom:0.25rem;">
+            <div style="font-size:0.78rem;color:var(--accent-warning);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">✏️ Name Changed</div>
+            <div style="margin-top:3px;font-size:0.85rem;"><strong>${old_name}</strong> → <strong>${new_name}</strong></div>
+            <div style="font-size:0.75rem;color:var(--text-secondary);margin-top:2px;">${email} · ${t}</div>
+          </div>` + list.innerHTML;
+
+        showToast(`✏️ Name changed: ${old_name} → ${new_name} (${email})`, 'warning');
+      });
+    }
+  </script>
+
+<!-- Tawk.to Script -->
+<script type="text/javascript">
+var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+(function(){
+var s1=document.createElement("script"),
+s0=document.getElementsByTagName("script")[0];
+s1.async=true;
+s1.src='https://embed.tawk.to/6970564aa3974e19801a37aa/1jffd25nb';
+s1.charset='UTF-8';
+s1.setAttribute('crossorigin','*');
+s0.parentNode.insertBefore(s1,s0);
+})();
+</script>
+
+<!-- Vedimy Chatbot Script -->
+<script src="../js/chatbot.js"></script>
+
+</body>
+</html>

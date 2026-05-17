@@ -1,0 +1,40 @@
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--glow-blue);
+  padding: 2rem;
+}
+
+.btn-primary {
+  background: var(--accent-primary);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background: var(--btn-hover);
+  box-shadow: var(--glow-blue);
+  transform: translateY(-1px);
+}
+
+.toast {
+  position: fixed;
+  bottom: 1.5rem; right: 1.5rem;
+  padding: 1rem 1.5rem;
+  border-radius: 10px;
+  color: white;
+  font-family: 'DM Sans', sans-serif;
+  z-index: 9999;
+}
+.toast.info { background: var(--accent-primary); }
+.toast.success { background: var(--accent-success); }
+.toast.error { background: var(--accent-danger); }

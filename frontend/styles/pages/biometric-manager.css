@@ -1,0 +1,102 @@
+/* ── Biometric Manager ──────────────────────────────────────── */
+.page       { max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem; }
+.page-title { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 800; margin-bottom: 0.25rem; }
+.page-sub   { color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 2rem; }
+
+/* Section cards */
+.section-card      { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; margin-bottom: 1.5rem; }
+.section-card h2   { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+
+/* Upload drop zone */
+.drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 2.5rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--bg-secondary);
+}
+.drop-zone:hover,
+.drop-zone.drag-over { border-color: var(--accent-primary); background: rgba(59, 130, 246, 0.05); }
+.drop-zone .dz-icon  { font-size: 2.5rem; margin-bottom: 0.75rem; }
+.drop-zone p         { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem; }
+.drop-zone .dz-hint  { font-size: 0.78rem; color: #484f58; }
+
+.upload-actions        { display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap; }
+.btn-upload-file       { flex: 1; min-width: 140px; }
+.btn-upload-folder     { flex: 1; min-width: 140px; }
+
+/* Progress */
+.progress-bar-wrap { background: var(--bg-secondary); border-radius: 99px; height: 8px; overflow: hidden; margin-top: 1rem; display: none; }
+.progress-bar-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6); border-radius: 99px; width: 0%; transition: width 0.3s; }
+
+/* Upload results */
+#upload-results     { margin-top: 1rem; max-height: 200px; overflow-y: auto; font-size: 0.83rem; display: none; }
+.result-row         { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0; border-bottom: 1px solid var(--border); }
+.result-row .r-icon { font-size: 1rem; flex-shrink: 0; }
+.result-row .r-file { flex: 1; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.result-row .r-status { font-size: 0.75rem; font-weight: 600; }
+.r-ok   { color: var(--accent-success); }
+.r-fail { color: var(--accent-danger); }
+.r-skip { color: var(--accent-warning); }
+
+/* Mode selector */
+.mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
+.mode-card {
+  padding: 1rem;
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.mode-card:hover   { border-color: var(--accent-primary); }
+.mode-card.active  { border-color: var(--accent-primary); background: rgba(59, 130, 246, 0.08); }
+.mode-card .mc-icon  { font-size: 1.8rem; margin-bottom: 0.4rem; }
+.mode-card .mc-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.2rem; }
+.mode-card .mc-desc  { font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4; }
+
+/* Profiles grid */
+.profiles-header  { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; }
+.profiles-count   { font-size: 0.85rem; color: var(--text-secondary); }
+.profiles-grid    { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.75rem; }
+
+.profile-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  transition: border-color 0.2s;
+}
+.profile-card:hover { border-color: var(--accent-primary); }
+.profile-thumb { width: 100%; aspect-ratio: 1/1; object-fit: cover; display: block; background: #111; }
+.profile-thumb-placeholder { width: 100%; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; font-size: 2rem; background: #1a1a2e; }
+.profile-label { padding: 0.4rem 0.5rem; font-size: 0.75rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.profile-delete {
+  position: absolute; top: 4px; right: 4px;
+  background: rgba(239, 68, 68, 0.85);
+  border: none; color: white; border-radius: 50%;
+  width: 22px; height: 22px;
+  font-size: 0.7rem; cursor: pointer;
+  display: none; align-items: center; justify-content: center;
+}
+.profile-card:hover .profile-delete { display: flex; }
+.empty-profiles { text-align: center; padding: 2rem; color: var(--text-secondary); font-size: 0.9rem; }
+
+/* Logs table */
+.logs-table     { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.logs-table th  { padding: 0.6rem 0.75rem; text-align: left; border-bottom: 1px solid var(--border); color: var(--text-secondary); font-weight: 600; }
+.logs-table td  { padding: 0.55rem 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.badge-sm       { padding: 0.15rem 0.5rem; border-radius: 20px; font-size: 0.7rem; font-weight: 700; }
+.badge-match    { background: rgba(16,185,129,0.15);  color: #34d399; }
+.badge-nomatch  { background: rgba(239,68,68,0.15);   color: #f87171; }
+.badge-noface   { background: rgba(245,158,11,0.15);  color: #fbbf24; }
+.badge-multi    { background: rgba(139,92,246,0.15);  color: #a78bfa; }
+.logs-wrap      { max-height: 320px; overflow-y: auto; }
+
+.alert-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+.alert-red       { background: var(--accent-danger); }
+.alert-amber     { background: var(--accent-warning); }
+.alert-purple    { background: #a78bfa; }

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vedimy - Analytics</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles/globals.css">
+  <link rel="stylesheet" href="../styles/components.css">
+  <link rel="stylesheet" href="../styles/layout.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="../styles/pages/analytics.css">
+
+</head>
+<body>
+  <div class="sidebar-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="nav-brand" style="font-size:1.5rem;color:var(--accent-primary);">Vedimy</div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/pages/dashboard.html" class="sidebar-link"><span>📊</span> Dashboard</a>
+        <a href="/pages/security-activity.html" class="sidebar-link"><span>🛡</span> Security & Activity</a>
+        <a href="/pages/learning-hub.html" class="sidebar-link"><span>📚</span> Learning Hub</a>
+        <a href="/pages/ai-teaching.html" class="sidebar-link"><span>🧠</span> AI Studio</a>
+        <a href="/pages/analytics.html" class="sidebar-link active"><span>📈</span> Analytics & Reports</a>
+        <a href="/pages/storage.html" class="sidebar-link"><span>☁️</span> Cloud Storage</a>
+        <a href="/pages/coordinator.html" class="sidebar-link"><span>👁</span> Monitor Exams</a>
+      </nav>
+      <div style="padding: 1rem;">
+        <button id="logout-btn" class="sidebar-link" style="width:100%; border:none; background:transparent; cursor:pointer; color:var(--accent-danger);">
+          <span>🚪</span> Logout
+        </button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-header">
+        <h2 style="font-size:1.2rem;">Analytics & Reports</h2>
+      </header>
+
+      <div class="content-area dash-layout">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:1rem;gap:1rem;">
+          <button class="btn-outline" id="export-csv-btn">📥 Export CSV Report</button>
+          <button class="btn-outline" id="export-pdf-btn">📄 Export PDF Report</button>
+        </div>
+
+        <div class="cards-grid">
+          <div class="stat-card"><div class="label">Classes Hosted</div><div class="value" id="stat-classes">0</div></div>
+          <div class="stat-card"><div class="label">Total Students</div><div class="value" id="stat-students">0</div></div>
+          <div class="stat-card"><div class="label">Exams Submitted</div><div class="value" id="stat-exams">0</div></div>
+          <div class="stat-card"><div class="label">Total Violations</div><div class="value" id="stat-violations" style="color:var(--accent-danger);">0</div></div>
+        </div>
+
+        <div class="charts-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem;">
+          <div class="chart-container">
+            <h3 style="margin-bottom:1rem;font-size:1rem;font-weight:600;">Violation Breakdown</h3>
+            <canvas id="violationChart"></canvas>
+          </div>
+          <div class="chart-container">
+            <h3 style="margin-bottom:1rem;font-size:1rem;font-weight:600;">Attendance Trend (Last 14 Days)</h3>
+            <canvas id="attendanceChart"></canvas>
+          </div>
+          <div class="chart-container">
+            <h3 style="margin-bottom:1rem;font-size:1rem;font-weight:600;">Exam Scores Distribution</h3>
+            <canvas id="examScoresChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast-container"></div>
+  <script type="module" src="../js/core/state.js"></script>
+  <script type="module" src="../js/core/api.js"></script>
+  <script type="module" src="../js/components/toast.js"></script>
+  <script type="module" src="../js/pages/analytics.js"></script>
+</body>
+</html>

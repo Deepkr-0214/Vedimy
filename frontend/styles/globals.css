@@ -1,0 +1,85 @@
+:root {
+  --bg-primary: #0A0E1A;
+  --bg-secondary: #111827;
+  --bg-card: #1A2235;
+  --accent-primary: #3B82F6;
+  --accent-secondary: #06B6D4;
+  --accent-success: #10B981;
+  --accent-danger: #EF4444;
+  --accent-warning: #F59E0B;
+  --text-primary: #F9FAFB;
+  --text-secondary: #9CA3AF;
+  --border: rgba(59, 130, 246, 0.15);
+  --glow-blue: 0 0 20px rgba(59, 130, 246, 0.3);
+  --nav-bg: rgba(10, 14, 26, 0.85);
+  --glass-bg: rgba(26, 34, 53, 0.8);
+  --btn-hover: #2563EB;
+
+  /* Element Specific Variables */
+  --glow-blob-1: rgba(59, 130, 246, 0.15);
+  --glow-blob-2: rgba(6, 182, 212, 0.12);
+  --badge-bg: rgba(59, 130, 246, 0.1);
+  --icon-blue-bg: rgba(59, 130, 246, 0.15);
+  --icon-cyan-bg: rgba(6, 182, 212, 0.15);
+  --icon-green-bg: rgba(16, 185, 129, 0.15);
+  --icon-amber-bg: rgba(245, 158, 11, 0.15);
+  --icon-red-bg: rgba(239, 68, 68, 0.15);
+  --icon-purple-bg: rgba(139, 92, 246, 0.15);
+  --card-grad-1: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(6,182,212,0.05));
+  --card-grad-2: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(6,182,212,0.05));
+  --card-grad-3: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(59,130,246,0.05));
+  --cta-bg: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(6, 182, 212, 0.08));
+}
+
+[data-theme="light"] {
+  --bg-primary: #FAFAFA;
+  --bg-secondary: #FFFFFF;
+  --bg-card: #FFFFFF;
+  /* Green theme matching reference */
+  --accent-primary: #10B981;
+  --accent-secondary: #34D399;
+  --accent-success: #10B981;
+  --accent-danger: #EF4444;
+  --accent-warning: #F59E0B;
+  --text-primary: #111827;
+  --text-secondary: #6B7280;
+  --border: rgba(16, 185, 129, 0.15);
+  --glow-blue: 0 4px 14px rgba(16, 185, 129, 0.1);
+  --nav-bg: rgba(255, 255, 255, 0.85);
+  --glass-bg: #FFFFFF;
+  --btn-hover: #059669;
+
+  /* Element Specific Variables */
+  --glow-blob-1: rgba(16, 185, 129, 0.08);
+  --glow-blob-2: rgba(52, 211, 153, 0.05);
+  --badge-bg: rgba(16, 185, 129, 0.1);
+  --icon-blue-bg: rgba(16, 185, 129, 0.1);
+  --icon-cyan-bg: rgba(52, 211, 153, 0.1);
+  --icon-green-bg: rgba(16, 185, 129, 0.15);
+  --icon-amber-bg: rgba(245, 158, 11, 0.1);
+  --icon-red-bg: rgba(239, 68, 68, 0.1);
+  --icon-purple-bg: rgba(139, 92, 246, 0.1);
+  --card-grad-1: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(255, 255, 255, 0));
+  --card-grad-2: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(255, 255, 255, 0));
+  --card-grad-3: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(255, 255, 255, 0));
+  --cta-bg: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(52, 211, 153, 0.02));
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+}
+
+h1, h2, h3 { font-family: 'Syne', sans-serif; }
+
+a { text-decoration: none; color: inherit; }
+
+.main-layout {
+  padding-top: 80px;
+  min-height: 100vh;
+  position: relative;
+}
