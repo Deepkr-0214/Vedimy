@@ -3,148 +3,756 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vedimy - Interactive Learning Hub</title>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <title>Vedimy – Learning Hub</title>
+  <meta name="description" content="Access AI-powered notes, smart quizzes, multi-language summaries, exam results, and lecture recordings.">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles/globals.css">
   <link rel="stylesheet" href="../styles/components.css">
   <link rel="stylesheet" href="../styles/layout.css">
+  <link rel="stylesheet" href="../styles/chatbot.css">
   <style>
-    .dash-layout { max-width:1100px; margin:0 auto; padding:2rem 1.5rem; }
-    .learning-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:1.5rem; }
-    .feature-card { background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:1.5rem; transition:all 0.3s; }
-    .feature-card:hover { transform:translateY(-4px); border-color:var(--accent-primary); box-shadow:var(--glow-blue); }
-    .feature-icon { font-size:2rem; margin-bottom:1rem; }
-    .feature-card h3 { margin-bottom:0.75rem; font-family:'Syne', sans-serif; }
-    .feature-card p { color:var(--text-secondary); font-size:0.9rem; line-height:1.6; margin-bottom:1.25rem; }
-    .btn-link { display:inline-block; padding:0.6rem 1.2rem; border-radius:8px; background:var(--accent-primary); color:white; text-decoration:none; font-weight:600; font-size:0.85rem; }
-    
-    .room-item { background:var(--bg-secondary); border-radius:10px; padding:1rem; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center; }
-    .room-info h4 { margin-bottom:0.25rem; }
-    .room-info p { font-size:0.8rem; color:var(--text-secondary); margin:0; }
+    .lh-wrapper { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+    /* ── Hero ───────────────────────────────────────── */
+    .lh-hero {
+      background: linear-gradient(135deg, rgba(99,102,241,.18), rgba(245,158,11,.1));
+      border: 1px solid rgba(99,102,241,.3);
+      border-radius: 20px;
+      padding: 2rem 2.5rem;
+      margin-bottom: 2rem;
+      display: flex; align-items: center; gap: 2rem;
+      position: relative; overflow: hidden;
+    }
+    .lh-hero::after {
+      content: '🎓'; position: absolute; right: 2rem; top: 50%;
+      transform: translateY(-50%); font-size: 7rem; opacity: 0.07; pointer-events: none;
+    }
+    .lh-hero-icon {
+      width: 64px; height: 64px; border-radius: 16px;
+      background: linear-gradient(135deg, #6366f1, #f59e0b);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; flex-shrink: 0;
+      box-shadow: 0 8px 24px rgba(99,102,241,.35);
+    }
+    .lh-hero h1 { font-family:'Syne',sans-serif; font-size: 1.6rem; margin-bottom: 0.35rem; }
+    .lh-hero p  { color: var(--text-secondary); font-size: 0.95rem; }
+
+    /* ── Stats Bar ──────────────────────────────────── */
+    .lh-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem; margin-bottom: 2rem;
+    }
+    .lh-stat-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.25rem;
+      display: flex; align-items: center; gap: 1rem;
+      transition: transform .2s, border-color .2s;
+    }
+    .lh-stat-card:hover { transform: translateY(-3px); border-color: var(--accent-primary); }
+    .lh-stat-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+    .lh-stat-label { font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.2rem; }
+    .lh-stat-value { font-size: 1.15rem; font-weight: 700; }
+
+    /* ── Section Header ─────────────────────────────── */
+    .section-hdr {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1.25rem;
+    }
+    .section-hdr h3 { font-size: 1.05rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
+
+    /* ── Feature Cards (2-col grid) ─────────────────── */
+    .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px,1fr)); gap: 1.25rem; margin-bottom: 2.5rem; }
+    .feature-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 1.5rem;
+      transition: transform .25s, border-color .25s, box-shadow .25s;
+    }
+    .feature-card:hover { transform: translateY(-4px); border-color: var(--accent-primary); box-shadow: var(--glow-blue); }
+    .fc-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+    .fc-icon { font-size: 1.75rem; }
+    .fc-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; }
+    .fc-desc  { color: var(--text-secondary); font-size: 0.87rem; line-height: 1.6; margin-bottom: 1.25rem; }
+    .fc-content { min-height: 60px; }
+
+    /* ── Exam Result Card ───────────────────────────── */
+    .exam-card {
+      background: var(--bg-secondary); border-radius: 12px; padding: 1rem 1.25rem;
+      margin-bottom: 0.75rem; display: flex; align-items: center; gap: 1rem;
+      border: 1px solid var(--border); transition: border-color .2s;
+    }
+    .exam-card:hover { border-color: rgba(99,102,241,.4); }
+    .exam-card .ec-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .exam-card .ec-info { flex: 1; min-width: 0; }
+    .exam-card .ec-title { font-weight: 600; font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .exam-card .ec-meta  { font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.2rem; }
+    .ec-score {
+      flex-shrink: 0; text-align: right;
+    }
+    .ec-score .score-num { font-size: 1.1rem; font-weight: 800; }
+    .ec-score .score-label { font-size: 0.72rem; color: var(--text-secondary); }
+
+    /* ── Class / Room card ──────────────────────────── */
+    .room-card {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1rem 1.25rem;
+      margin-bottom: 0.75rem; display: flex; align-items: center; gap: 1rem;
+      transition: border-color .2s;
+    }
+    .room-card:hover { border-color: rgba(99,102,241,.4); }
+    .room-card .rc-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .room-card .rc-info { flex: 1; min-width: 0; }
+    .room-card .rc-title { font-weight: 600; font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .room-card .rc-meta  { font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.2rem; }
+    .room-card .rc-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+
+    /* ── AI Summary Panel ───────────────────────────── */
+    .summary-box {
+      background: linear-gradient(135deg, rgba(99,102,241,.08), rgba(16,185,129,.05));
+      border: 1px solid rgba(99,102,241,.2);
+      border-radius: 12px; padding: 1.25rem;
+      font-size: 0.9rem; line-height: 1.75;
+      white-space: pre-wrap; margin-bottom: 1rem;
+      max-height: 260px; overflow-y: auto;
+      color: var(--text-primary);
+    }
+    .keypoints-box {
+      background: var(--bg-secondary); border-radius: 12px; padding: 1.25rem;
+      font-size: 0.88rem; line-height: 1.7; margin-bottom: 1rem;
+      max-height: 200px; overflow-y: auto;
+    }
+
+    /* ── Language Selector ──────────────────────────── */
+    .lang-row { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; }
+    .lang-select {
+      flex: 1; min-width: 140px;
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.5rem 0.75rem;
+      color: var(--text-primary); font-size: 0.85rem;
+    }
+    .translate-btn {
+      background: var(--accent-primary); color: white;
+      border: none; border-radius: 8px; padding: 0.5rem 1rem;
+      cursor: pointer; font-weight: 600; font-size: 0.85rem;
+      transition: opacity .2s;
+    }
+    .translate-btn:hover { opacity: 0.85; }
+    .translate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Pill / Badge ───────────────────────────────── */
+    .pill { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.7rem; border-radius: 20px; font-size: 0.72rem; font-weight: 600; }
+    .pill-green  { background: var(--icon-green-bg);  color: var(--accent-success); }
+    .pill-amber  { background: var(--icon-amber-bg);  color: var(--accent-warning); }
+    .pill-blue   { background: var(--icon-blue-bg);   color: var(--accent-primary); }
+    .pill-red    { background: var(--icon-red-bg);    color: var(--accent-danger); }
+    .pill-purple { background: rgba(139,92,246,.15);  color: #a78bfa; }
+
+    /* ── Score color ────────────────────────────────── */
+    .score-great { color: var(--accent-success); }
+    .score-ok    { color: var(--accent-warning); }
+    .score-bad   { color: var(--accent-danger); }
+
+    /* ── Empty state ────────────────────────────────── */
+    .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--text-secondary); }
+    .empty-state .es-icon { font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.5; }
+    .empty-state p { font-size: 0.88rem; }
+
+    /* ── Notification item ──────────────────────────── */
+    .notif-item {
+      background: var(--bg-secondary); border-radius: 10px; padding: 0.9rem 1rem;
+      margin-bottom: 0.6rem; display: flex; align-items: flex-start; gap: 0.75rem;
+      border-left: 3px solid var(--accent-primary);
+    }
+    .notif-item .ni-icon { font-size: 1.2rem; flex-shrink: 0; }
+    .notif-item .ni-text { font-size: 0.87rem; line-height: 1.5; }
+    .notif-item .ni-time { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem; }
+
+    /* ── Upcoming exams ─────────────────────────────── */
+    .upcoming-card {
+      background: linear-gradient(135deg, rgba(245,158,11,.1), rgba(239,68,68,.06));
+      border: 1px solid rgba(245,158,11,.25);
+      border-radius: 12px; padding: 1rem 1.25rem;
+      margin-bottom: 0.75rem; display: flex; align-items: center; gap: 1rem;
+    }
+    .upcoming-card .uc-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .upcoming-card .uc-info { flex: 1; }
+    .upcoming-card .uc-title { font-weight: 700; font-size: 0.92rem; margin-bottom: 0.25rem; }
+    .upcoming-card .uc-meta { font-size: 0.78rem; color: var(--text-secondary); }
+
+    /* ── Mobile ─────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .feature-grid { grid-template-columns: 1fr; }
+      .lh-hero { flex-direction: column; gap: 1rem; }
+    }
   </style>
 </head>
 <body>
   <div class="sidebar-layout">
+    <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <div class="nav-brand" style="font-size:1.5rem;color:var(--accent-primary);">Vedimy</div>
       </div>
       <nav class="sidebar-nav">
         <a href="/pages/dashboard.html" class="sidebar-link"><span>📊</span> Dashboard</a>
-        <a href="/pages/security-activity.html" class="sidebar-link"><span>🛡</span> Security & Activity</a>
+        <a href="/pages/security-activity.html" class="sidebar-link"><span>🛡</span> Security &amp; Activity</a>
         <a href="/pages/learning-hub.html" class="sidebar-link active"><span>📚</span> Learning Hub</a>
       </nav>
-      <div style="padding: 1rem;">
-        <button id="logout-btn" class="sidebar-link" style="width:100%; border:none; background:transparent; cursor:pointer; color:var(--accent-danger);">
+      <div style="padding:1rem;">
+        <button id="logout-btn" class="sidebar-link" style="width:100%;border:none;background:transparent;cursor:pointer;color:var(--accent-danger);">
           <span>🚪</span> Logout
         </button>
       </div>
     </aside>
 
+    <!-- Main -->
     <main class="main-content">
       <header class="top-header">
-        <h2 style="font-size:1.2rem;">Interactive Smart Learning Experience</h2>
+        <div style="display:flex;align-items:center;gap:1rem;">
+          <button id="mobile-menu-btn" style="display:none;background:transparent;border:none;font-size:1.5rem;color:var(--text-primary);cursor:pointer;">☰</button>
+          <h2 style="font-size:1.2rem;">Learning Hub</h2>
+        </div>
+        <div class="top-header-right">
+          <div style="display:flex;align-items:center;gap:0.5rem;background:var(--badge-bg);padding:0.25rem 0.75rem;border-radius:20px;font-size:0.85rem;color:var(--accent-success);">
+            <span style="width:8px;height:8px;background:var(--accent-success);border-radius:50%;display:inline-block;"></span> Active
+          </div>
+          <div style="position:relative;cursor:pointer;margin:0 0.5rem;" id="notif-bell-lh">
+            🔔
+            <span id="notif-badge-lh" style="display:none;position:absolute;top:-5px;right:-5px;background:var(--accent-danger);color:white;font-size:0.6rem;padding:2px 5px;border-radius:10px;">0</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-left:0.5rem;">
+            <div style="width:32px;height:32px;border-radius:50%;background:var(--accent-primary);color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;" id="header-avatar">G</div>
+            <div>
+              <div style="font-size:0.9rem;font-weight:600;" id="header-name">Guest</div>
+              <div style="font-size:0.75rem;color:var(--text-secondary);">GUEST</div>
+            </div>
+          </div>
+        </div>
       </header>
 
-      <div class="content-area dash-layout">
-        <div class="welcome-bar">
-          <h1 style="font-size:1.75rem;margin-bottom:0.5rem;">Welcome to your Learning Hub</h1>
-          <p>Access AI-powered notes, smart quizzes, and automated learning support.</p>
+      <div class="content-area lh-wrapper">
+
+        <!-- Hero -->
+        <div class="lh-hero">
+          <div class="lh-hero-icon">🎓</div>
+          <div>
+            <h1>Your Interactive Learning Hub</h1>
+            <p>AI-powered notes, smart quizzes, exam results, lecture recordings, and multi-language support — all in one place.</p>
+          </div>
         </div>
 
-        <div class="learning-grid">
+        <!-- Stats Bar -->
+        <div class="lh-stats">
+          <div class="lh-stat-card">
+            <div class="lh-stat-icon" style="background:var(--icon-blue-bg);">🎓</div>
+            <div><div class="lh-stat-label">Classes Attended</div><div class="lh-stat-value" id="stat-attended">—</div></div>
+          </div>
+          <div class="lh-stat-card">
+            <div class="lh-stat-icon" style="background:var(--icon-amber-bg);">📝</div>
+            <div><div class="lh-stat-label">Exams Taken</div><div class="lh-stat-value" id="stat-exams-taken">—</div></div>
+          </div>
+          <div class="lh-stat-card">
+            <div class="lh-stat-icon" style="background:var(--icon-green-bg);">🏆</div>
+            <div><div class="lh-stat-label">Avg. Score</div><div class="lh-stat-value" id="stat-avg-score">—</div></div>
+          </div>
+          <div class="lh-stat-card">
+            <div class="lh-stat-icon" style="background:rgba(139,92,246,.15);">🧠</div>
+            <div><div class="lh-stat-label">AI Summaries</div><div class="lh-stat-value" id="stat-summaries">—</div></div>
+          </div>
+        </div>
+
+        <!-- ── Row 1: Upcoming Exams + Notifications ── -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2.5rem;">
+
+          <!-- Upcoming Exams -->
           <div class="feature-card">
-            <div class="feature-icon">🧠</div>
-            <h3>AI-Powered Notes</h3>
-            <p>Get automated summaries, key points, and translations of your lectures instantly.</p>
-            <div id="latest-notes-list">
-               <div style="font-size:0.8rem;color:var(--text-secondary);">Select a past room to view notes.</div>
+            <div class="fc-header">
+              <div class="fc-icon">📅</div>
+              <div class="fc-title">Upcoming Exams</div>
             </div>
-            <a href="/pages/dashboard.html" class="btn-link" style="margin-top:1rem;">Go to Dashboard</a>
-          </div>
-
-          <div class="feature-card">
-            <div class="feature-icon">📋</div>
-            <h3>Smart Quizzes</h3>
-            <p>Challenge yourself with AI-generated quizzes based on your lecture materials.</p>
-            <div id="latest-quizzes-list">
-               <div style="font-size:0.8rem;color:var(--text-secondary);">Quizzes appear here after lectures.</div>
+            <div id="upcoming-exams-list" class="fc-content">
+              <div class="empty-state"><div class="es-icon">📅</div><p>Loading upcoming exams…</p></div>
             </div>
           </div>
 
+          <!-- Notifications -->
           <div class="feature-card">
-            <div class="feature-icon">💬</div>
-            <h3>Real-time Interaction</h3>
-            <p>Engage with teachers and peers through live chat, hand raising, and shared whiteboards.</p>
-            <p style="font-style:italic;">Available inside active classrooms.</p>
-          </div>
-          
-          <div class="feature-card">
-            <div class="feature-icon">🛡️</div>
-            <h3>Secure Environment</h3>
-            <p>Your education is protected by advanced biometric verification and session monitoring.</p>
-            <a href="/pages/security-activity.html" class="btn-link">View Security Logs</a>
+            <div class="fc-header">
+              <div class="fc-icon">🔔</div>
+              <div class="fc-title">Notifications</div>
+            </div>
+            <div id="notifications-list" class="fc-content" style="max-height:220px;overflow-y:auto;">
+              <div class="empty-state"><div class="es-icon">🔔</div><p>Loading notifications…</p></div>
+            </div>
           </div>
         </div>
 
-        <div style="margin-top:3rem;">
-          <h3 style="margin-bottom:1.5rem;">Recent Classes</h3>
-          <div id="recent-rooms-list">
-             <div style="color:var(--text-secondary);">Loading your recent classes...</div>
+        <!-- ── Exam Results & Performance ── -->
+        <div style="margin-bottom:2.5rem;">
+          <div class="section-hdr">
+            <h3>📊 Exam Results &amp; Performance Tracking</h3>
+            <span id="results-count-badge" class="pill pill-blue">Loading…</span>
+          </div>
+          <div id="exam-results-list">
+            <div class="empty-state"><div class="es-icon">📊</div><p>Loading your exam results…</p></div>
           </div>
         </div>
-      </div>
+
+        <!-- ── Past Classes & Materials ── -->
+        <div style="margin-bottom:2.5rem;">
+          <div class="section-hdr">
+            <h3>🎓 My Past Classes &amp; Study Materials</h3>
+          </div>
+          <div id="past-classes-list">
+            <div class="empty-state"><div class="es-icon">🎓</div><p>Loading your past classes…</p></div>
+          </div>
+        </div>
+
+        <!-- ── AI Summaries & Translations ── -->
+        <div style="margin-bottom:2.5rem;">
+          <div class="section-hdr">
+            <h3>🧠 AI Lecture Summaries &amp; Multi-Language Translation</h3>
+          </div>
+          <div id="ai-summary-section">
+            <div class="empty-state"><div class="es-icon">🧠</div><p>Select a class above to view its AI-generated summary, key points, and translations.</p></div>
+          </div>
+        </div>
+
+        <!-- ── Feature Cards Grid ── -->
+        <div class="section-hdr" style="margin-bottom:1.25rem;">
+          <h3>✨ All Learning Features</h3>
+        </div>
+        <div class="feature-grid">
+
+          <!-- Live Quiz Participation -->
+          <div class="feature-card">
+            <div class="fc-header">
+              <div class="fc-icon">🎯</div>
+              <div class="fc-title">Live Quiz &amp; Polls</div>
+            </div>
+            <p class="fc-desc">Participate in live quizzes, polls, and interactive classroom activities with instant real-time results.</p>
+            <div style="background:var(--bg-secondary);border-radius:10px;padding:0.9rem;font-size:0.85rem;color:var(--text-secondary);">
+              <span class="pill pill-blue">Available inside classrooms</span>
+              <p style="margin-top:0.5rem;margin-bottom:0;">Join an active class session to access live quizzes and polls from your host.</p>
+            </div>
+          </div>
+
+          <!-- Video & Audio -->
+          <div class="feature-card">
+            <div class="fc-header">
+              <div class="fc-icon">🎥</div>
+              <div class="fc-title">Video &amp; Audio Participation</div>
+            </div>
+            <p class="fc-desc">Toggle your microphone and camera during live sessions. Participate in discussions with raise-hand and live chat.</p>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+              <span class="pill pill-green">Camera Control</span>
+              <span class="pill pill-blue">Mic Toggle</span>
+              <span class="pill pill-purple">Raise Hand</span>
+              <span class="pill pill-amber">Live Chat</span>
+            </div>
+          </div>
+
+          <!-- Screen Sharing / Content -->
+          <div class="feature-card">
+            <div class="fc-header">
+              <div class="fc-icon">🖥️</div>
+              <div class="fc-title">Screen &amp; Content Viewing</div>
+            </div>
+            <p class="fc-desc">View host screen sharing, presentations, PDFs, whiteboard content, and shared study materials in real-time.</p>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+              <span class="pill pill-green">Screen Share</span>
+              <span class="pill pill-blue">PDF Viewer</span>
+              <span class="pill pill-purple">Whiteboard</span>
+            </div>
+          </div>
+
+          <!-- AI Chatbot -->
+          <div class="feature-card">
+            <div class="fc-header">
+              <div class="fc-icon">🤖</div>
+              <div class="fc-title">AI Chatbot &amp; Live Support</div>
+            </div>
+            <p class="fc-desc">Get instant AI educational guidance, technical support, and smart answers to your academic questions anytime.</p>
+            <button class="btn-primary" style="padding:0.5rem 1rem;font-size:0.85rem;" id="open-chatbot-btn">Open AI Assistant</button>
+          </div>
+
+          <!-- Reconnect -->
+          <div class="feature-card">
+            <div class="fc-header">
+              <div class="fc-icon">🔄</div>
+              <div class="fc-title">Automatic Reconnect</div>
+            </div>
+            <p class="fc-desc">If your internet drops, Vedimy automatically reconnects you to the session without losing your progress or exam answers.</p>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+              <span class="pill pill-green">Auto-Reconnect</span>
+              <span class="pill pill-blue">Cloud Save</span>
+              <span class="pill pill-purple">Session Recovery</span>
+            </div>
+          </div>
+
+          <!-- Cloud Access -->
+          <div class="feature-card">
+            <div class="fc-header">
+              <div class="fc-icon">☁️</div>
+              <div class="fc-title">Cloud-Based Secure Access</div>
+            </div>
+            <p class="fc-desc">Access all your classes, exam reports, recordings, notes, and AI summaries securely from anywhere in the world.</p>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+              <span class="pill pill-green">Secure Storage</span>
+              <span class="pill pill-blue">Any Device</span>
+              <span class="pill pill-amber">End-to-End Encrypted</span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /lh-wrapper -->
     </main>
   </div>
+
+  <!-- AI Summary Detail Modal -->
+  <div id="summary-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:600;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto;">
+    <div class="glass-card" style="width:100%;max-width:760px;position:relative;">
+      <button onclick="document.getElementById('summary-modal').style.display='none'" style="position:absolute;top:1rem;right:1rem;background:transparent;border:none;color:var(--text-secondary);font-size:1.4rem;cursor:pointer;">✕</button>
+      <h3 style="margin-bottom:0.25rem;" id="modal-room-title">Lecture Summary</h3>
+      <div style="color:var(--text-secondary);font-size:0.83rem;margin-bottom:1.5rem;" id="modal-room-date">—</div>
+
+      <!-- Tabs -->
+      <div style="display:flex;gap:0.5rem;margin-bottom:1.25rem;flex-wrap:wrap;">
+        <button class="sa-tab active" id="modal-tab-summary" onclick="switchModalTab('summary', this)" style="padding:0.45rem 0.9rem;font-size:0.82rem;">🧠 AI Summary</button>
+        <button class="sa-tab" id="modal-tab-keypoints" onclick="switchModalTab('keypoints', this)" style="padding:0.45rem 0.9rem;font-size:0.82rem;">📌 Key Points</button>
+        <button class="sa-tab" id="modal-tab-translate" onclick="switchModalTab('translate', this)" style="padding:0.45rem 0.9rem;font-size:0.82rem;">🌐 Translate</button>
+        <button class="sa-tab" id="modal-tab-files" onclick="switchModalTab('files', this)" style="padding:0.45rem 0.9rem;font-size:0.82rem;">📁 Files &amp; Recording</button>
+      </div>
+
+      <!-- Summary Panel -->
+      <div id="modal-panel-summary">
+        <div class="summary-box" id="modal-summary-text">Loading AI summary…</div>
+      </div>
+
+      <!-- Key Points Panel -->
+      <div id="modal-panel-keypoints" style="display:none;">
+        <div class="keypoints-box" id="modal-keypoints-text">Loading key points…</div>
+      </div>
+
+      <!-- Translate Panel -->
+      <div id="modal-panel-translate" style="display:none;">
+        <div class="lang-row">
+          <select class="lang-select" id="modal-lang-select">
+            <option value="">Select Language…</option>
+          </select>
+          <button class="translate-btn" id="modal-translate-btn">🌐 Translate</button>
+        </div>
+        <div class="summary-box" id="modal-translated-text" style="min-height:100px;">Select a language and click Translate.</div>
+      </div>
+
+      <!-- Files Panel -->
+      <div id="modal-panel-files" style="display:none;">
+        <div id="modal-files-list">
+          <div class="empty-state"><div class="es-icon">📁</div><p>Loading shared files and recordings…</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .sa-tab { padding: 0.6rem 1.25rem; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; font-weight: 600; font-size: 0.87rem; border-radius: 10px; transition: all .2s; }
+    .sa-tab.active { background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; box-shadow: 0 4px 12px rgba(99,102,241,.4); }
+    .sa-tab:not(.active):hover { background: var(--bg-secondary); color: var(--text-primary); }
+  </style>
 
   <div id="toast-container"></div>
   <script type="module">
     import { AppState } from '../js/core/state.js';
-    import { api } from '../js/core/api.js';
+    import { api }      from '../js/core/api.js';
     import { showToast } from '../js/components/toast.js';
 
+    // Auth guard
     if (!AppState.getToken()) window.location.href = '/pages/login.html';
 
-    async function loadRecentClasses() {
+    let allRooms   = [];
+    let allResults = [];
+    let currentRoomId   = null;
+    let currentLectureId = null;
+    let currentAiId      = null;
+
+    // ── Modal tab switcher ─────────────────────────────────────
+    window.switchModalTab = (name, btn) => {
+      ['summary','keypoints','translate','files'].forEach(t => {
+        document.getElementById('modal-panel-' + t).style.display = 'none';
+        document.getElementById('modal-tab-' + t).classList.remove('active');
+      });
+      document.getElementById('modal-panel-' + name).style.display = 'block';
+      if (btn) btn.classList.add('active');
+    };
+
+    // ── Load user ──────────────────────────────────────────────
+    async function loadMe() {
       try {
-        const rooms = await api.get('/rooms/my-attended');
-        const list = document.getElementById('recent-rooms-list');
-        
-        if (rooms.length === 0) {
-          list.innerHTML = '<div style="color:var(--text-secondary);background:var(--bg-card);padding:2rem;border-radius:12px;text-align:center;border:1px solid var(--border);">You haven\'t joined any classes yet. Join one using a room code!</div>';
+        const u = await api.get('/auth/me');
+        document.getElementById('header-name').textContent = u.name || 'Guest';
+        document.getElementById('header-avatar').textContent = (u.name || 'G')[0].toUpperCase();
+      } catch(e) {}
+    }
+
+    // ── Load upcoming exams ────────────────────────────────────
+    async function loadUpcomingExams() {
+      try {
+        const exams = await api.get('/exams/upcoming');
+        const el = document.getElementById('upcoming-exams-list');
+        if (!exams || exams.length === 0) {
+          el.innerHTML = '<div class="empty-state"><div class="es-icon">📅</div><p>No upcoming exams scheduled.</p></div>';
           return;
         }
-
-        list.innerHTML = rooms.map(r => `
-          <div class="room-item">
-            <div class="room-info">
-              <h4>${r.title}</h4>
-              <p>${r.room_code} &bull; ${r.room_type.toUpperCase()}</p>
-            </div>
-            <div style="display:flex;gap:0.5rem;">
-               <button class="btn-outline" style="padding:0.4rem 0.8rem;font-size:0.8rem;" onclick="viewMaterials('${r.id}')">View Materials</button>
-               <button class="btn-primary" style="padding:0.4rem 0.8rem;font-size:0.8rem;" onclick="window.location.href='/pages/face-auth.html?code=${r.room_code}'">Join Again</button>
+        el.innerHTML = exams.slice(0,4).map(e => `
+          <div class="upcoming-card">
+            <div class="uc-icon">📝</div>
+            <div class="uc-info">
+              <div class="uc-title">${e.title}</div>
+              <div class="uc-meta">${e.duration_minutes} min · ${e.start_time ? fmtDate(e.start_time) : 'Not scheduled'}</div>
             </div>
           </div>
         `).join('');
+      } catch(e) {}
+    }
 
-      } catch (e) {
-        showToast('Error loading classes', 'error');
+    // ── Load notifications ─────────────────────────────────────
+    async function loadNotifications() {
+      try {
+        const notes = await api.get('/notifications/');
+        const el = document.getElementById('notifications-list');
+        const unread = notes.filter(n => !n.is_read);
+        if (unread.length > 0) {
+          document.getElementById('notif-badge-lh').style.display = 'block';
+          document.getElementById('notif-badge-lh').textContent = unread.length;
+        }
+        if (!notes || notes.length === 0) {
+          el.innerHTML = '<div class="empty-state"><div class="es-icon">🔔</div><p>No new notifications.</p></div>';
+          return;
+        }
+        const iconMap = { class_start:'🎓', exam_start:'📝', quiz:'🎯', warning:'⚠️', material:'📎', summary:'🧠', update:'🔔' };
+        el.innerHTML = notes.slice(0, 6).map(n => `
+          <div class="notif-item" style="${!n.is_read ? 'border-left-color:var(--accent-success)' : 'border-left-color:var(--border);opacity:0.7'}">
+            <div class="ni-icon">${iconMap[n.type] || '🔔'}</div>
+            <div>
+              <div class="ni-text">${n.message || n.title || 'Notification'}</div>
+              <div class="ni-time">${fmtDate(n.created_at)}</div>
+            </div>
+          </div>
+        `).join('');
+      } catch(e) {
+        document.getElementById('notifications-list').innerHTML =
+          '<div class="empty-state"><div class="es-icon">🔔</div><p>No notifications yet.</p></div>';
       }
     }
 
-    window.viewMaterials = async (roomId) => {
-       // We can redirect to dashboard or open a modal. 
-       // For simplicity in the hub, let's just show a toast or redirect.
-       window.location.href = '/pages/dashboard.html';
+    // ── Load exam results ──────────────────────────────────────
+    async function loadExamResults() {
+      try {
+        const results = await api.get('/exams/my-results');
+        allResults = results || [];
+        const el = document.getElementById('exam-results-list');
+        const badge = document.getElementById('results-count-badge');
+        badge.textContent = allResults.length + ' exam' + (allResults.length !== 1 ? 's' : '');
+
+        // Stats
+        document.getElementById('stat-exams-taken').textContent = allResults.length;
+        if (allResults.length > 0) {
+          const scores = allResults.filter(r => r.score != null).map(r => r.score);
+          const avg = scores.length > 0 ? Math.round(scores.reduce((a,b) => a+b,0) / scores.length) : null;
+          if (avg != null) {
+            const el = document.getElementById('stat-avg-score');
+            el.textContent = avg + '%';
+            el.style.color = avg >= 70 ? 'var(--accent-success)' : avg >= 50 ? 'var(--accent-warning)' : 'var(--accent-danger)';
+          }
+        }
+
+        if (allResults.length === 0) {
+          el.innerHTML = '<div class="empty-state"><div class="es-icon">📊</div><p>No exam results yet. Join a session to get started!</p></div>';
+          return;
+        }
+        el.innerHTML = allResults.map(r => {
+          const score = r.score != null ? r.score.toFixed(1) : null;
+          const scoreCls = score == null ? '' : score >= 70 ? 'score-great' : score >= 50 ? 'score-ok' : 'score-bad';
+          return `<div class="exam-card">
+            <div class="ec-icon">📝</div>
+            <div class="ec-info">
+              <div class="ec-title">${r.exam_title || 'Exam'}</div>
+              <div class="ec-meta">${r.room_title || ''} · ${r.submitted_at ? fmtDate(r.submitted_at) : 'N/A'}</div>
+            </div>
+            <div class="ec-score">
+              <div class="score-num ${scoreCls}">${score != null ? score + '%' : '—'}</div>
+              <div class="score-label">${score != null ? (score >= 70 ? '🏆 Passed' : score >= 50 ? '📈 Average' : '⚠️ Below avg') : 'Pending'}</div>
+            </div>
+          </div>`;
+        }).join('');
+      } catch(e) {
+        document.getElementById('exam-results-list').innerHTML =
+          '<div class="empty-state"><div class="es-icon">📊</div><p>Could not load results.</p></div>';
+      }
+    }
+
+    // ── Load past classes ──────────────────────────────────────
+    async function loadPastClasses() {
+      try {
+        const rooms = await api.get('/rooms/my-attended');
+        allRooms = rooms || [];
+        const el = document.getElementById('past-classes-list');
+        document.getElementById('stat-attended').textContent = allRooms.length;
+
+        if (allRooms.length === 0) {
+          el.innerHTML = '<div class="empty-state"><div class="es-icon">🎓</div><p>No classes attended yet. Join a class to get started!</p></div>';
+          return;
+        }
+        el.innerHTML = allRooms.map(r => {
+          const icon = r.room_type === 'exam' ? '📝' : '🎓';
+          return `<div class="room-card">
+            <div class="rc-icon">${icon}</div>
+            <div class="rc-info">
+              <div class="rc-title">${r.title}</div>
+              <div class="rc-meta">${r.room_code} · ${r.room_type.toUpperCase()}</div>
+            </div>
+            <div class="rc-actions">
+              <button class="btn-outline" style="padding:0.4rem 0.75rem;font-size:0.8rem;" onclick="openSummary('${r.id}','${escHtml(r.title)}')">🧠 AI Notes</button>
+              <button class="btn-primary"  style="padding:0.4rem 0.75rem;font-size:0.8rem;" onclick="window.location.href='/pages/face-auth.html?code=${r.room_code}'">↩ Rejoin</button>
+            </div>
+          </div>`;
+        }).join('');
+      } catch(e) {
+        document.getElementById('past-classes-list').innerHTML =
+          '<div class="empty-state"><div class="es-icon">🎓</div><p>Could not load past classes.</p></div>';
+      }
+    }
+
+    // ── AI Summary & Translations ──────────────────────────────
+    window.openSummary = async (roomId, roomTitle) => {
+      currentRoomId = roomId;
+      document.getElementById('modal-room-title').textContent = roomTitle + ' — AI Summary';
+      document.getElementById('modal-summary-text').textContent = 'Loading…';
+      document.getElementById('modal-keypoints-text').textContent = 'Loading…';
+      document.getElementById('modal-files-list').innerHTML = '<div class="empty-state"><div class="es-icon">📁</div><p>Loading…</p></div>';
+      document.getElementById('modal-translated-text').textContent = 'Select a language and click Translate.';
+      switchModalTab('summary', document.getElementById('modal-tab-summary'));
+      document.getElementById('summary-modal').style.display = 'flex';
+
+      // Load AI lectures for this room
+      try {
+        const data = await api.get('/ai/lectures');
+        const lectures = (data.lectures || []).filter(l => l.room_id === roomId);
+        const aiSummaries = (data.ai_lectures || []).filter(l => l.room_id === roomId);
+
+        if (lectures.length === 0) {
+          document.getElementById('modal-summary-text').textContent = 'No AI lecture summary available for this class yet. The host needs to generate one.';
+          document.getElementById('modal-keypoints-text').textContent = 'No key points available.';
+          return;
+        }
+
+        const lecture = lectures[0];
+        currentLectureId = lecture.id;
+
+        // Load full summary
+        const summaryData = await api.get(`/ai/lectures/${lecture.id}/summary`);
+        currentAiId = summaryData.ai_lecture_id;
+        document.getElementById('modal-summary-text').textContent = summaryData.summary || 'No summary generated yet.';
+        document.getElementById('modal-keypoints-text').innerHTML = summaryData.key_points
+          ? summaryData.key_points.split('\n').filter(Boolean).map(p => `<div style="padding:0.3rem 0;display:flex;gap:0.5rem;"><span>•</span><span>${p.replace(/^[•\-\*]\s*/,'')}</span></div>`).join('')
+          : '<div style="color:var(--text-secondary)">No key points extracted yet.</div>';
+
+        // Date
+        if (summaryData.created_at) {
+          document.getElementById('modal-room-date').textContent = 'Generated: ' + fmtDate(summaryData.created_at);
+        }
+      } catch(e) {
+        document.getElementById('modal-summary-text').textContent = 'Could not load summary: ' + e.message;
+      }
+
+      // Load shared files
+      try {
+        const mats = await api.get(`/rooms/${roomId}/materials`);
+        const files = mats.shared_files || [];
+        document.getElementById('modal-files-list').innerHTML = files.length === 0
+          ? '<div class="empty-state"><div class="es-icon">📁</div><p>No files or recordings shared for this class.</p></div>'
+          : files.map(f => `
+            <div class="room-card" style="margin-bottom:0.5rem;">
+              <div class="rc-icon">${f.type === 'mp4' || f.type === 'webm' ? '🎬' : '📄'}</div>
+              <div class="rc-info">
+                <div class="rc-title">${f.filename || 'File'}</div>
+                <div class="rc-meta">${f.type ? f.type.toUpperCase() : 'File'} · ${f.size ? Math.round(f.size/1024) + ' KB' : ''}</div>
+              </div>
+              <a href="/api/files/download/${f.id}" class="btn-primary" style="padding:0.4rem 0.75rem;font-size:0.8rem;text-decoration:none;" target="_blank">⬇ Download</a>
+            </div>
+          `).join('');
+      } catch(e) {}
+
+      // Load translation languages
+      try {
+        const langData = await api.get('/ai/languages');
+        const langs = langData.languages || [];
+        document.getElementById('modal-lang-select').innerHTML =
+          '<option value="">Select Language…</option>' +
+          langs.map(l => `<option value="${l.code}">${l.flag || ''} ${l.name}</option>`).join('');
+      } catch(e) {}
     };
 
-    loadRecentClasses();
+    // Translate
+    document.getElementById('modal-translate-btn')?.addEventListener('click', async () => {
+      const lang = document.getElementById('modal-lang-select').value;
+      if (!lang) { showToast('Please select a language first', 'warning'); return; }
+      if (!currentAiId) { showToast('No AI summary available to translate', 'warning'); return; }
+      const btn = document.getElementById('modal-translate-btn');
+      btn.disabled = true;
+      btn.textContent = 'Translating…';
+      document.getElementById('modal-translated-text').textContent = 'Translating…';
+      try {
+        const res = await api.post('/ai/translate', { ai_lecture_id: currentAiId, target_language: lang });
+        document.getElementById('modal-translated-text').textContent = res.translated_summary || 'No translation available.';
+      } catch(e) {
+        document.getElementById('modal-translated-text').textContent = 'Translation failed: ' + e.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🌐 Translate';
+      }
+    });
 
+    // AI Summary stat
+    async function loadAiStat() {
+      try {
+        const data = await api.get('/ai/lectures');
+        document.getElementById('stat-summaries').textContent = (data.lectures || []).length;
+      } catch(e) {
+        document.getElementById('stat-summaries').textContent = '0';
+      }
+    }
+
+    // ── Chatbot trigger ────────────────────────────────────────
+    document.getElementById('open-chatbot-btn').addEventListener('click', () => {
+      const chatBtn = document.getElementById('chatbot-toggle-btn');
+      if (chatBtn) chatBtn.click();
+    });
+
+    // ── Logout ─────────────────────────────────────────────────
     document.getElementById('logout-btn').addEventListener('click', () => {
       AppState.clearAuth();
       window.location.href = '/pages/login.html';
     });
+
+    // ── Helpers ────────────────────────────────────────────────
+    function fmtDate(ts) {
+      if (!ts) return '—';
+      return new Date(ts).toLocaleString('en-IN', {
+        day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'
+      });
+    }
+    function escHtml(s) {
+      return (s||'').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    // ── Init ───────────────────────────────────────────────────
+    loadMe();
+    loadUpcomingExams();
+    loadNotifications();
+    loadExamResults();
+    loadPastClasses();
+    loadAiStat();
   </script>
 </body>
 </html>

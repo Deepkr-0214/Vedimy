@@ -69,6 +69,9 @@ def get_security_activity():
         "attendance_logs": [{
             "id": l.id,
             "room_id": l.room_id,
+            "room_title": Room.query.get(l.room_id).title if l.room_id and Room.query.get(l.room_id) else "Unknown Session",
+            "room_code":  Room.query.get(l.room_id).room_code if l.room_id and Room.query.get(l.room_id) else "",
+            "room_type":  Room.query.get(l.room_id).room_type if l.room_id and Room.query.get(l.room_id) else "class",
             "join_time": l.join_time.isoformat() if l.join_time else None,
             "leave_time": l.leave_time.isoformat() if l.leave_time else None,
             "status": l.status

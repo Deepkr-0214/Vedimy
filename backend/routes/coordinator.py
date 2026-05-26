@@ -11,9 +11,10 @@ coordinator_bp = Blueprint('coordinator', __name__)
 @jwt_required()
 def my_exams():
     user_id = get_jwt_identity()
-    exams = Exam.query.filter_by(coordinator_id=user_id).all()
+    # Exam model uses host_id — coordinators can view exams they host
+    exams = Exam.query.filter_by(host_id=user_id).all()
     return jsonify([{
-        "id": e.id,
+        "id": str(e.id),
         "title": e.title,
         "status": e.status,
         "duration_minutes": e.duration_minutes,

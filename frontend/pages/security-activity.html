@@ -3,196 +3,757 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vedimy - Security & Activity</title>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <title>Vedimy – Secure Session Protection</title>
+  <meta name="description" content="Monitor your biometric verification, session history, attendance, and security logs securely.">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles/globals.css">
   <link rel="stylesheet" href="../styles/components.css">
   <link rel="stylesheet" href="../styles/layout.css">
+  <link rel="stylesheet" href="../styles/chatbot.css">
   <style>
-    .dash-layout { max-width:1100px; margin:0 auto; padding:2rem 1.5rem; }
-    .tabs { display:flex; gap:1rem; border-bottom:1px solid var(--border); margin-bottom:2rem; }
-    .tab-btn { padding:0.75rem 1rem; border:none; background:transparent; color:var(--text-secondary); cursor:pointer; font-weight:600; font-size:0.9rem; border-bottom:2px solid transparent; transition:all 0.2s; }
-    .tab-btn.active { color:var(--accent-primary); border-bottom-color:var(--accent-primary); }
-    .log-container { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
-    table { width:100%; border-collapse:collapse; }
-    th { text-align:left; padding:1rem; background:rgba(255,255,255,0.03); font-size:0.85rem; color:var(--text-secondary); border-bottom:1px solid var(--border); }
-    td { padding:1rem; border-bottom:1px solid var(--border); font-size:0.9rem; }
-    .status-pill { padding:0.2rem 0.6rem; border-radius:12px; font-size:0.75rem; font-weight:600; }
-    .status-success { background:var(--icon-green-bg); color:var(--accent-success); }
-    .status-failed { background:var(--icon-red-bg); color:var(--accent-danger); }
-    .status-warn { background:var(--icon-amber-bg); color:var(--accent-warning); }
+    /* ── Layout ─────────────────────────────────────── */
+    .sa-wrapper { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+    /* ── Hero Banner ───────────────────────────────── */
+    .sa-hero {
+      background: linear-gradient(135deg, rgba(99,102,241,.18), rgba(16,185,129,.1));
+      border: 1px solid rgba(99,102,241,.3);
+      border-radius: 20px;
+      padding: 2rem 2.5rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .sa-hero::after {
+      content: '🛡️';
+      position: absolute;
+      right: 2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 6rem;
+      opacity: 0.08;
+      pointer-events: none;
+    }
+    .sa-hero-icon {
+      width: 64px; height: 64px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #6366f1, #10b981);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; flex-shrink: 0;
+      box-shadow: 0 8px 24px rgba(99,102,241,.35);
+    }
+    .sa-hero h1 { font-family: 'Syne', sans-serif; font-size: 1.6rem; margin-bottom: 0.35rem; }
+    .sa-hero p { color: var(--text-secondary); font-size: 0.95rem; }
+
+    /* ── Status Strip ──────────────────────────────── */
+    .status-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .status-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: transform .2s, border-color .2s;
+    }
+    .status-card:hover { transform: translateY(-3px); border-color: var(--accent-primary); }
+    .status-card .sc-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; flex-shrink: 0;
+    }
+    .sc-icon.green  { background: var(--icon-green-bg); }
+    .sc-icon.blue   { background: var(--icon-blue-bg); }
+    .sc-icon.amber  { background: var(--icon-amber-bg); }
+    .sc-icon.purple { background: rgba(139,92,246,.15); }
+    .status-card .sc-label { font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.25rem; }
+    .status-card .sc-value { font-size: 1.05rem; font-weight: 700; }
+    .sc-value.ok    { color: var(--accent-success); }
+    .sc-value.warn  { color: var(--accent-warning); }
+    .sc-value.bad   { color: var(--accent-danger); }
+
+    /* ── Tabs ──────────────────────────────────────── */
+    .sa-tabs {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+      background: var(--bg-card);
+      padding: 0.4rem;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+    }
+    .sa-tab {
+      padding: 0.6rem 1.25rem;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.87rem;
+      border-radius: 10px;
+      transition: all .2s;
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+    .sa-tab.active {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(99,102,241,.4);
+    }
+    .sa-tab:not(.active):hover { background: var(--bg-secondary); color: var(--text-primary); }
+
+    /* ── Panel Base ────────────────────────────────── */
+    .sa-panel { display: none; animation: panelIn .3s ease; }
+    .sa-panel.active { display: block; }
+    @keyframes panelIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+    /* ── Section Title ─────────────────────────────── */
+    .section-title {
+      font-size: 1rem; font-weight: 700;
+      margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+      color: var(--text-primary);
+    }
+
+    /* ── Log Table ─────────────────────────────────── */
+    .log-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 1.5rem; }
+    .log-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    .log-table th { text-align: left; padding: 0.85rem 1rem; background: rgba(255,255,255,.03); color: var(--text-secondary); font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--border); }
+    .log-table td { padding: 0.9rem 1rem; border-bottom: 1px solid rgba(255,255,255,.04); vertical-align: middle; }
+    .log-table tr:last-child td { border-bottom: none; }
+    .log-table tr:hover td { background: rgba(255,255,255,.02); }
+    .empty-row { text-align: center; color: var(--text-secondary); padding: 2.5rem !important; }
+
+    /* ── Pill ──────────────────────────────────────── */
+    .pill { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.7rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+    .pill-green  { background: var(--icon-green-bg); color: var(--accent-success); }
+    .pill-red    { background: var(--icon-red-bg); color: var(--accent-danger); }
+    .pill-amber  { background: var(--icon-amber-bg); color: var(--accent-warning); }
+    .pill-blue   { background: var(--icon-blue-bg); color: var(--accent-primary); }
+    .pill-purple { background: rgba(139,92,246,.15); color: #a78bfa; }
+
+    /* ── Biometric Status Card ─────────────────────── */
+    .bio-status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+    @media (max-width: 600px) { .bio-status-grid { grid-template-columns: 1fr; } }
+    .bio-status-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .bio-status-box .bsb-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+    .bio-status-box .bsb-label { color: var(--text-secondary); font-size: 0.83rem; margin-bottom: 0.4rem; }
+    .bio-status-box .bsb-value { font-size: 1.1rem; font-weight: 700; }
+
+    /* ── Timeline ──────────────────────────────────── */
+    .timeline { display: flex; flex-direction: column; gap: 0; }
+    .timeline-item {
+      display: flex;
+      gap: 1.25rem;
+      padding: 1.1rem 0;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      animation: panelIn .3s ease;
+    }
+    .timeline-item:last-child { border-bottom: none; }
+    .tl-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      margin-top: 5px;
+      flex-shrink: 0;
+    }
+    .tl-dot.green  { background: var(--accent-success); box-shadow: 0 0 6px var(--accent-success); }
+    .tl-dot.red    { background: var(--accent-danger);  box-shadow: 0 0 6px var(--accent-danger); }
+    .tl-dot.amber  { background: var(--accent-warning); box-shadow: 0 0 6px var(--accent-warning); }
+    .tl-dot.blue   { background: var(--accent-primary); box-shadow: 0 0 6px var(--accent-primary); }
+    .tl-content .tl-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.15rem; }
+    .tl-content .tl-meta  { font-size: 0.78rem; color: var(--text-secondary); }
+
+    /* ── Attendance Grid ───────────────────────────── */
+    .att-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: border-color .2s;
+    }
+    .att-card:hover { border-color: var(--accent-primary); }
+    .att-card .att-icon { font-size: 1.6rem; flex-shrink: 0; }
+    .att-card .att-info { flex: 1; }
+    .att-card .att-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.2rem; }
+    .att-card .att-meta  { font-size: 0.8rem; color: var(--text-secondary); }
+    .att-card .att-right { text-align: right; flex-shrink: 0; }
+    .att-card .att-duration { font-size: 1rem; font-weight: 700; color: var(--accent-primary); }
+    .att-card .att-time { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.2rem; }
+
+    /* ── Violation Card ────────────────────────────── */
+    .viol-card {
+      background: rgba(239,68,68,.07);
+      border: 1px solid rgba(239,68,68,.25);
+      border-radius: 14px;
+      padding: 1.25rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    .viol-card .vc-icon { font-size: 1.5rem; flex-shrink: 0; margin-top: 2px; }
+    .viol-card .vc-type { font-weight: 700; font-size: 0.9rem; color: var(--accent-danger); margin-bottom: 0.2rem; }
+    .viol-card .vc-time { font-size: 0.78rem; color: var(--text-secondary); }
+    .vc-severity { margin-left: auto; flex-shrink: 0; }
+
+    /* ── Reconnect / Recovery Panel ────────────────── */
+    .recovery-card {
+      background: linear-gradient(135deg, rgba(99,102,241,.1), rgba(16,185,129,.07));
+      border: 1px solid rgba(99,102,241,.25);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .recovery-card .rc-icon { font-size: 2.5rem; flex-shrink: 0; }
+    .recovery-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .recovery-card p { font-size: 0.85rem; color: var(--text-secondary); margin: 0; }
+    .rc-actions { margin-left: auto; display: flex; gap: 0.5rem; flex-shrink: 0; }
+
+    /* ── Empty State ───────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-secondary);
+    }
+    .empty-state .es-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
+    .empty-state p { font-size: 0.9rem; }
+
+    /* ── Refresh Btn ───────────────────────────────── */
+    .refresh-btn {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 0.4rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .refresh-btn:hover { border-color: var(--accent-primary); color: var(--accent-primary); }
   </style>
 </head>
 <body>
   <div class="sidebar-layout">
+    <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <div class="nav-brand" style="font-size:1.5rem;color:var(--accent-primary);">Vedimy</div>
       </div>
       <nav class="sidebar-nav">
         <a href="/pages/dashboard.html" class="sidebar-link"><span>📊</span> Dashboard</a>
-        <a href="/pages/security-activity.html" class="sidebar-link active"><span>🛡</span> Security & Activity</a>
+        <a href="/pages/security-activity.html" class="sidebar-link active"><span>🛡</span> Security &amp; Activity</a>
         <a href="/pages/learning-hub.html" class="sidebar-link"><span>📚</span> Learning Hub</a>
       </nav>
-      <div style="padding: 1rem;">
-        <button id="logout-btn" class="sidebar-link" style="width:100%; border:none; background:transparent; cursor:pointer; color:var(--accent-danger);">
+      <div style="padding:1rem;">
+        <button id="logout-btn" class="sidebar-link" style="width:100%;border:none;background:transparent;cursor:pointer;color:var(--accent-danger);">
           <span>🚪</span> Logout
         </button>
       </div>
     </aside>
 
+    <!-- Main -->
     <main class="main-content">
       <header class="top-header">
-        <h2 style="font-size:1.2rem;">Security & Activity Center</h2>
+        <div style="display:flex;align-items:center;gap:1rem;">
+          <button id="mobile-menu-btn" style="display:none;background:transparent;border:none;font-size:1.5rem;color:var(--text-primary);cursor:pointer;">☰</button>
+          <h2 style="font-size:1.2rem;">Security &amp; Activity</h2>
+        </div>
+        <div class="top-header-right">
+          <div style="display:flex;align-items:center;gap:0.5rem;background:var(--badge-bg);padding:0.25rem 0.75rem;border-radius:20px;font-size:0.85rem;color:var(--accent-success);">
+            <span style="width:8px;height:8px;background:var(--accent-success);border-radius:50%;display:inline-block;"></span> Active
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-left:1rem;">
+            <div style="width:32px;height:32px;border-radius:50%;background:var(--accent-primary);color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;" id="header-avatar">G</div>
+            <div>
+              <div style="font-size:0.9rem;font-weight:600;" id="header-name">Guest</div>
+              <div style="font-size:0.75rem;color:var(--text-secondary);">GUEST</div>
+            </div>
+          </div>
+        </div>
       </header>
 
-      <div class="content-area dash-layout">
-        <div class="welcome-bar">
-          <h1 style="font-size:1.75rem;margin-bottom:0.5rem;">Secure Session Protection</h1>
-          <p>Monitor your biometric logs, session history, and security activity.</p>
+      <div class="content-area sa-wrapper">
+
+        <!-- Hero -->
+        <div class="sa-hero">
+          <div class="sa-hero-icon">🔐</div>
+          <div>
+            <h1>Secure Session Protection</h1>
+            <p>Your biometric verification, attendance records, and security activity — all in one place.</p>
+          </div>
         </div>
 
-        <div class="tabs">
-          <button class="tab-btn active" onclick="switchTab('auth')">🔐 Session History</button>
-          <button class="tab-btn" onclick="switchTab('biometric')">👤 Biometric Logs</button>
-          <button class="tab-btn" onclick="switchTab('attendance')">📋 Attendance</button>
-          <button class="tab-btn" onclick="switchTab('security')">🚨 Security Monitoring</button>
+        <!-- Status Strip -->
+        <div class="status-strip" id="status-strip">
+          <div class="status-card">
+            <div class="sc-icon green">✅</div>
+            <div>
+              <div class="sc-label">Biometric Status</div>
+              <div class="sc-value ok" id="bio-status-val">Loading…</div>
+            </div>
+          </div>
+          <div class="status-card">
+            <div class="sc-icon blue">📋</div>
+            <div>
+              <div class="sc-label">Sessions Attended</div>
+              <div class="sc-value" id="sessions-count">—</div>
+            </div>
+          </div>
+          <div class="status-card">
+            <div class="sc-icon amber">⚠️</div>
+            <div>
+              <div class="sc-label">Total Violations</div>
+              <div class="sc-value" id="viol-count">—</div>
+            </div>
+          </div>
+          <div class="status-card">
+            <div class="sc-icon purple">🔑</div>
+            <div>
+              <div class="sc-label">Last Login</div>
+              <div class="sc-value" id="last-login-val" style="font-size:0.85rem;">—</div>
+            </div>
+          </div>
         </div>
 
-        <div id="auth-panel" class="tab-panel">
-          <div class="log-container">
-            <table>
+        <!-- Tabs -->
+        <div class="sa-tabs">
+          <button class="sa-tab active" id="tab-session" onclick="switchTab('session', this)">🔐 Session History</button>
+          <button class="sa-tab" id="tab-biometric" onclick="switchTab('biometric', this)">👤 Biometric Logs</button>
+          <button class="sa-tab" id="tab-attendance" onclick="switchTab('attendance', this)">📋 Attendance</button>
+          <button class="sa-tab" id="tab-violations" onclick="switchTab('violations', this)">🚨 Violations</button>
+          <button class="sa-tab" id="tab-recovery" onclick="switchTab('recovery', this)">🔄 Session Recovery</button>
+        </div>
+
+        <!-- ── Tab: Session History ────────────────── -->
+        <div class="sa-panel active" id="panel-session">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+            <div class="section-title">🔐 Your Login &amp; Session History</div>
+            <button class="refresh-btn" onclick="loadAll()">↻ Refresh</button>
+          </div>
+          <div class="log-card">
+            <table class="log-table">
               <thead>
                 <tr>
-                  <th>Timestamp</th>
+                  <th>Date &amp; Time</th>
+                  <th>Login Method</th>
                   <th>IP Address</th>
-                  <th>Method</th>
                   <th>Status</th>
-                  <th>User Agent</th>
+                  <th>Device</th>
                 </tr>
               </thead>
-              <tbody id="auth-logs"></tbody>
+              <tbody id="auth-log-body">
+                <tr><td class="empty-row" colspan="5">Loading…</td></tr>
+              </tbody>
             </table>
           </div>
         </div>
 
-        <div id="biometric-panel" class="tab-panel" style="display:none;">
-          <div class="log-container">
-            <table>
+        <!-- ── Tab: Biometric Logs ─────────────────── -->
+        <div class="sa-panel" id="panel-biometric">
+          <div class="section-title" style="margin-bottom:1.25rem;">👤 Face Verification Records</div>
+
+          <div class="bio-status-grid">
+            <div class="bio-status-box">
+              <div class="bsb-icon">🧬</div>
+              <div class="bsb-label">Face Registration</div>
+              <div class="bsb-value ok" id="face-reg-status">Checking…</div>
+            </div>
+            <div class="bio-status-box">
+              <div class="bsb-icon">🎯</div>
+              <div class="bsb-label">Total Verifications</div>
+              <div class="bsb-value" id="total-verif">—</div>
+            </div>
+            <div class="bio-status-box">
+              <div class="bsb-icon">✅</div>
+              <div class="bsb-label">Successful Matches</div>
+              <div class="bsb-value ok" id="matched-verif">—</div>
+            </div>
+            <div class="bio-status-box">
+              <div class="bsb-icon">❌</div>
+              <div class="bsb-label">Failed Attempts</div>
+              <div class="bsb-value bad" id="failed-verif">—</div>
+            </div>
+          </div>
+
+          <div class="section-title">Recent Verification Events</div>
+          <div class="log-card">
+            <table class="log-table">
               <thead>
                 <tr>
-                  <th>Timestamp</th>
+                  <th>Date &amp; Time</th>
                   <th>Result</th>
-                  <th>Confidence</th>
+                  <th>Confidence Score</th>
+                  <th>Context</th>
                 </tr>
               </thead>
-              <tbody id="biometric-logs"></tbody>
+              <tbody id="bio-log-body">
+                <tr><td class="empty-row" colspan="4">Loading…</td></tr>
+              </tbody>
             </table>
           </div>
         </div>
 
-        <div id="attendance-panel" class="tab-panel" style="display:none;">
-          <div class="log-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>Join Time</th>
-                  <th>Leave Time</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody id="attendance-logs"></tbody>
-            </table>
+        <!-- ── Tab: Attendance ────────────────────── -->
+        <div class="sa-panel" id="panel-attendance">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+            <div class="section-title" style="margin:0;">📋 Your Attendance &amp; Session Tracking</div>
+            <span class="pill pill-blue" id="att-total-badge">0 sessions</span>
+          </div>
+          <div id="attendance-cards">
+            <div class="empty-state"><div class="es-icon">📋</div><p>Loading your attendance records…</p></div>
           </div>
         </div>
 
-        <div id="security-panel" class="tab-panel" style="display:none;">
-          <div class="log-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>Timestamp</th>
-                  <th>Event</th>
-                  <th>Details</th>
-                </tr>
-              </thead>
-              <tbody id="security-logs"></tbody>
-            </table>
+        <!-- ── Tab: Violations ────────────────────── -->
+        <div class="sa-panel" id="panel-violations">
+          <div class="section-title">🚨 Exam Violation &amp; Warning Log</div>
+          <p style="color:var(--text-secondary);font-size:0.88rem;margin-bottom:1.25rem;">
+            These are the AI proctoring events recorded during your exam sessions. Repeated violations may result in automatic exam submission.
+          </p>
+          <div id="violations-list">
+            <div class="empty-state"><div class="es-icon">🎉</div><p>No violations recorded. Great job!</p></div>
           </div>
         </div>
-      </div>
+
+        <!-- ── Tab: Session Recovery ──────────────── -->
+        <div class="sa-panel" id="panel-recovery">
+          <div class="section-title">🔄 Reconnect &amp; Session Recovery</div>
+
+          <div class="recovery-card">
+            <div class="rc-icon">📡</div>
+            <div>
+              <h3>Automatic Reconnection Active</h3>
+              <p>If your internet drops during a class or exam, Vedimy automatically reconnects you without losing your progress or session state.</p>
+            </div>
+            <div class="rc-actions">
+              <span class="pill pill-green">● Active</span>
+            </div>
+          </div>
+
+          <div class="recovery-card" style="background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.25);">
+            <div class="rc-icon">🔒</div>
+            <div>
+              <h3>Biometric Re-Verification on Reconnect</h3>
+              <p>After reconnecting to a secured exam, your face is re-verified to ensure session integrity and prevent impersonation.</p>
+            </div>
+            <div class="rc-actions">
+              <span class="pill pill-amber">Enabled</span>
+            </div>
+          </div>
+
+          <div class="recovery-card" style="background:rgba(16,185,129,.07);border-color:rgba(16,185,129,.25);">
+            <div class="rc-icon">☁️</div>
+            <div>
+              <h3>Cloud-Based Secure Access</h3>
+              <p>Your exam answers, notes, and AI summaries are securely saved to the cloud in real-time. Nothing is lost on disconnection.</p>
+            </div>
+            <div class="rc-actions">
+              <span class="pill pill-green">Active</span>
+            </div>
+          </div>
+
+          <!-- Active Session Recovery Actions -->
+          <div class="section-title" style="margin-top:1.5rem;">Active / Recent Sessions</div>
+          <div id="recovery-sessions">
+            <div class="empty-state"><div class="es-icon">✅</div><p>All sessions completed normally. No recovery needed.</p></div>
+          </div>
+
+          <!-- Privacy Controls -->
+          <div class="section-title" style="margin-top:2rem;">🔏 Privacy &amp; Data Controls</div>
+          <div class="log-card" style="padding:1.5rem;">
+            <div style="display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.25rem;">
+              <div style="font-size:1.5rem;">🧬</div>
+              <div style="flex:1;">
+                <div style="font-weight:600;margin-bottom:0.25rem;">Biometric Face Encoding</div>
+                <div style="color:var(--text-secondary);font-size:0.85rem;">Your face encoding is encrypted and stored securely. You can delete it at any time, but doing so will prevent entry to secured sessions.</div>
+              </div>
+              <button id="delete-face-btn" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--accent-danger);padding:0.5rem 1rem;border-radius:8px;cursor:pointer;font-size:0.85rem;flex-shrink:0;">Delete Biometric Data</button>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:1rem;">
+              <div style="font-size:1.5rem;">📋</div>
+              <div style="flex:1;">
+                <div style="font-weight:600;margin-bottom:0.25rem;">Session Logs</div>
+                <div style="color:var(--text-secondary);font-size:0.85rem;">Your session history, attendance, and verification logs are kept for 90 days and used only for security monitoring.</div>
+              </div>
+              <span class="pill pill-blue">90-day retention</span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /sa-wrapper -->
     </main>
+  </div>
+
+  <!-- Delete Confirm Modal -->
+  <div id="delete-confirm-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:600;align-items:center;justify-content:center;">
+    <div class="glass-card" style="width:90%;max-width:400px;border:1px solid var(--accent-danger);">
+      <h3 style="color:var(--accent-danger);margin-bottom:0.75rem;">⚠️ Delete Biometric Data</h3>
+      <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.5rem;line-height:1.6;">This will permanently delete your face encoding. You will not be able to enter any secured class or exam until you re-register your face. Are you sure?</p>
+      <div style="display:flex;gap:0.75rem;">
+        <button id="confirm-delete-face" style="flex:1;background:var(--accent-danger);color:#fff;border:none;padding:0.8rem;border-radius:8px;cursor:pointer;font-weight:700;">Yes, Delete</button>
+        <button id="cancel-delete-face" style="flex:1;background:var(--bg-secondary);border:1px solid var(--border);color:var(--text-primary);padding:0.8rem;border-radius:8px;cursor:pointer;">Cancel</button>
+      </div>
+    </div>
   </div>
 
   <div id="toast-container"></div>
   <script type="module">
     import { AppState } from '../js/core/state.js';
-    import { api } from '../js/core/api.js';
+    import { api }      from '../js/core/api.js';
     import { showToast } from '../js/components/toast.js';
 
+    // Auth guard
     if (!AppState.getToken()) window.location.href = '/pages/login.html';
 
-    async function loadLogs() {
+    // Tab switching
+    window.switchTab = (name, btn) => {
+      document.querySelectorAll('.sa-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.sa-tab').forEach(b => b.classList.remove('active'));
+      document.getElementById('panel-' + name).classList.add('active');
+      if (btn) btn.classList.add('active');
+    };
+
+    // Header user info
+    async function loadMe() {
+      try {
+        const u = await api.get('/auth/me');
+        document.getElementById('header-name').textContent = u.name || 'Guest';
+        document.getElementById('header-avatar').textContent = (u.name || 'G')[0].toUpperCase();
+
+        // Biometric status
+        const bioVal = document.getElementById('bio-status-val');
+        const faceReg = document.getElementById('face-reg-status');
+        if (u.face_registered) {
+          bioVal.textContent = 'Registered ✓';
+          bioVal.className = 'sc-value ok';
+          faceReg.textContent = 'Registered ✓';
+          faceReg.className = 'bsb-value ok';
+        } else {
+          bioVal.textContent = 'Not Registered';
+          bioVal.className = 'sc-value warn';
+          faceReg.textContent = 'Not Registered';
+          faceReg.className = 'bsb-value warn';
+        }
+      } catch(e) { /* silent */ }
+    }
+
+    // Load security data
+    async function loadAll() {
       try {
         const data = await api.get('/analytics/security-activity');
-        
-        // Auth Logs
-        document.getElementById('auth-logs').innerHTML = data.auth_logs.map(l => `
-          <tr>
-            <td>${new Date(l.timestamp).toLocaleString()}</td>
-            <td>${l.ip_address}</td>
-            <td><span class="status-pill" style="background:var(--badge-bg);">${l.auth_method}</span></td>
-            <td><span class="status-pill status-${l.status}">${l.status}</span></td>
-            <td style="font-size:0.75rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;">${l.user_agent}</td>
-          </tr>
-        `).join('') || '<tr><td colspan="5" style="text-align:center;">No logs found</td></tr>';
 
-        // Biometric Logs
-        document.getElementById('biometric-logs').innerHTML = data.biometric_logs.map(l => `
-          <tr>
-            <td>${new Date(l.timestamp).toLocaleString()}</td>
-            <td><span class="status-pill ${l.result === 'matched' ? 'status-success' : 'status-failed'}">${l.result}</span></td>
-            <td>${(l.confidence * 100).toFixed(1)}%</td>
-          </tr>
-        `).join('') || '<tr><td colspan="3" style="text-align:center;">No logs found</td></tr>';
+        // ── Stats Strip ───────────────────────────────
+        const attLogs   = data.attendance_logs  || [];
+        const authLogs  = data.auth_logs        || [];
+        const bioLogs   = data.biometric_logs   || [];
+        const secLogs   = data.security_logs    || [];
 
-        // Attendance Logs
-        document.getElementById('attendance-logs').innerHTML = data.attendance_logs.map(l => `
-          <tr>
-            <td>${l.join_time ? new Date(l.join_time).toLocaleString() : 'N/A'}</td>
-            <td>${l.leave_time ? new Date(l.leave_time).toLocaleString() : 'Active'}</td>
-            <td><span class="status-pill status-success">${l.status}</span></td>
-          </tr>
-        `).join('') || '<tr><td colspan="3" style="text-align:center;">No logs found</td></tr>';
+        document.getElementById('sessions-count').textContent = attLogs.length;
+        document.getElementById('viol-count').textContent     = secLogs.length;
 
-        // Security Logs
-        document.getElementById('security-logs').innerHTML = data.security_logs.map(l => `
-          <tr>
-            <td>${new Date(l.timestamp).toLocaleString()}</td>
-            <td><span class="status-pill status-warn">${l.event_type}</span></td>
-            <td style="font-size:0.8rem;">${JSON.stringify(l.details)}</td>
-          </tr>
-        `).join('') || '<tr><td colspan="3" style="text-align:center;">No logs found</td></tr>';
+        // Last login
+        if (authLogs.length > 0) {
+          const latest = authLogs[0];
+          document.getElementById('last-login-val').textContent =
+            new Date(latest.timestamp).toLocaleDateString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+        }
 
-      } catch (e) {
-        showToast('Failed to load logs: ' + e.message, 'error');
+        // ── Session History Tab ────────────────────────
+        document.getElementById('auth-log-body').innerHTML = authLogs.length
+          ? authLogs.map(l => {
+              const method = l.auth_method === 'face' ? '👤 Face ID' : '🔑 Password';
+              const ua = l.user_agent || '';
+              const device = ua.includes('Mobile') ? '📱 Mobile' : '💻 Desktop';
+              const statusCls = l.status === 'success' ? 'pill-green' : 'pill-red';
+              return `<tr>
+                <td>${fmtDate(l.timestamp)}</td>
+                <td><span class="pill pill-blue">${method}</span></td>
+                <td style="font-family:monospace;font-size:0.83rem;">${l.ip_address || '—'}</td>
+                <td><span class="pill ${statusCls}">${l.status}</span></td>
+                <td style="font-size:0.78rem;color:var(--text-secondary);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${ua}">${device} · ${getBrowser(ua)}</td>
+              </tr>`;
+            }).join('')
+          : '<tr><td class="empty-row" colspan="5">No login history yet</td></tr>';
+
+        // ── Biometric Tab ──────────────────────────────
+        const matched = bioLogs.filter(l => l.result === 'matched').length;
+        const failed  = bioLogs.filter(l => l.result !== 'matched').length;
+        document.getElementById('total-verif').textContent   = bioLogs.length;
+        document.getElementById('matched-verif').textContent = matched;
+        document.getElementById('failed-verif').textContent  = failed;
+
+        document.getElementById('bio-log-body').innerHTML = bioLogs.length
+          ? bioLogs.map(l => {
+              const ok = l.result === 'matched';
+              const conf = l.confidence != null ? (l.confidence * 100).toFixed(1) + '%' : 'N/A';
+              const confColor = l.confidence > 0.85 ? 'var(--accent-success)' : l.confidence > 0.6 ? 'var(--accent-warning)' : 'var(--accent-danger)';
+              return `<tr>
+                <td>${fmtDate(l.timestamp)}</td>
+                <td><span class="pill ${ok ? 'pill-green' : 'pill-red'}">${ok ? '✓ Matched' : '✗ Failed'}</span></td>
+                <td><span style="font-weight:700;color:${confColor}">${conf}</span></td>
+                <td style="color:var(--text-secondary);font-size:0.82rem;">${l.context || 'Room Entry Verification'}</td>
+              </tr>`;
+            }).join('')
+          : '<tr><td class="empty-row" colspan="4">No face verification records yet</td></tr>';
+
+        // ── Attendance Tab ─────────────────────────────
+        document.getElementById('att-total-badge').textContent = attLogs.length + ' session' + (attLogs.length !== 1 ? 's' : '');
+        if (attLogs.length === 0) {
+          document.getElementById('attendance-cards').innerHTML =
+            '<div class="empty-state"><div class="es-icon">📋</div><p>No attendance records yet. Join a class to get started!</p></div>';
+        } else {
+          document.getElementById('attendance-cards').innerHTML = attLogs.map(l => {
+            const joinTime  = l.join_time  ? new Date(l.join_time)  : null;
+            const leaveTime = l.leave_time ? new Date(l.leave_time) : null;
+            let duration = '—';
+            if (joinTime && leaveTime) {
+              const mins = Math.round((leaveTime - joinTime) / 60000);
+              duration = mins >= 60 ? `${Math.floor(mins/60)}h ${mins%60}m` : `${mins}m`;
+            }
+            const statusOk = l.status === 'present' || l.status === 'joined';
+            const icon = l.room_type === 'exam' ? '📝' : '🎓';
+            return `<div class="att-card">
+              <div class="att-icon">${icon}</div>
+              <div class="att-info">
+                <div class="att-title">${l.room_title || 'Class Session'}</div>
+                <div class="att-meta">${l.room_code || ''} · <span class="pill ${statusOk ? 'pill-green' : 'pill-amber'}" style="font-size:0.7rem;">${l.status || 'attended'}</span></div>
+              </div>
+              <div class="att-right">
+                <div class="att-duration">${duration}</div>
+                <div class="att-time">${joinTime ? joinTime.toLocaleDateString('en-IN', {day:'numeric',month:'short'}) : '—'}</div>
+              </div>
+            </div>`;
+          }).join('');
+        }
+
+        // ── Violations Tab ─────────────────────────────
+        const violations = secLogs.filter(l =>
+          ['face_missing','multiple_faces','tab_switch','fullscreen_exit','suspicious_movement','face_mismatch'].includes(l.event_type)
+        );
+        if (violations.length === 0) {
+          document.getElementById('violations-list').innerHTML =
+            '<div class="empty-state"><div class="es-icon">🎉</div><p>No violations recorded. Keep it up!</p></div>';
+        } else {
+          const iconMap = {
+            face_missing: '👤',
+            multiple_faces: '👥',
+            tab_switch: '🔀',
+            fullscreen_exit: '🖥️',
+            suspicious_movement: '🎭',
+            face_mismatch: '❌'
+          };
+          const labelMap = {
+            face_missing: 'Face Not Detected',
+            multiple_faces: 'Multiple Faces Detected',
+            tab_switch: 'Tab / Window Switch',
+            fullscreen_exit: 'Fullscreen Mode Exited',
+            suspicious_movement: 'Suspicious Movement',
+            face_mismatch: 'Face Mismatch Detected'
+          };
+          const sevMap = { high: 'pill-red', medium: 'pill-amber', low: 'pill-blue' };
+          document.getElementById('violations-list').innerHTML = violations.map(v => {
+            const sev = v.details?.severity || 'medium';
+            return `<div class="viol-card">
+              <div class="vc-icon">${iconMap[v.event_type] || '⚠️'}</div>
+              <div style="flex:1;">
+                <div class="vc-type">${labelMap[v.event_type] || v.event_type}</div>
+                <div class="vc-time">${fmtDate(v.timestamp)}</div>
+              </div>
+              <div class="vc-severity">
+                <span class="pill ${sevMap[sev] || 'pill-amber'}">${sev.toUpperCase()}</span>
+              </div>
+            </div>`;
+          }).join('');
+        }
+
+        // ── Recovery: recent incomplete sessions ───────
+        const incompleteSessions = attLogs.filter(l => l.join_time && !l.leave_time);
+        if (incompleteSessions.length > 0) {
+          document.getElementById('recovery-sessions').innerHTML = incompleteSessions.map(l => `
+            <div class="att-card" style="border-color:rgba(99,102,241,.3);">
+              <div class="att-icon">📡</div>
+              <div class="att-info">
+                <div class="att-title">${l.room_title || 'Active Session'}</div>
+                <div class="att-meta">Joined ${l.join_time ? fmtDate(l.join_time) : '—'} · Session may still be active</div>
+              </div>
+              <button class="btn-primary" style="padding:0.4rem 0.9rem;font-size:0.82rem;" onclick="window.location.href='/pages/face-auth.html?code=${l.room_code||''}'">Rejoin</button>
+            </div>
+          `).join('');
+        }
+
+      } catch(e) {
+        showToast('Failed to load security data: ' + e.message, 'error');
       }
     }
 
-    window.switchTab = (tab) => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
-      
-      event.target.classList.add('active');
-      document.getElementById(tab + '-panel').style.display = 'block';
-    };
+    // ── Helpers ────────────────────────────────────────
+    function fmtDate(ts) {
+      if (!ts) return '—';
+      return new Date(ts).toLocaleString('en-IN', {
+        day: 'numeric', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+    }
+    function getBrowser(ua) {
+      if (!ua) return 'Unknown';
+      if (ua.includes('Chrome'))  return 'Chrome';
+      if (ua.includes('Firefox')) return 'Firefox';
+      if (ua.includes('Safari'))  return 'Safari';
+      if (ua.includes('Edge'))    return 'Edge';
+      return 'Browser';
+    }
 
-    loadLogs();
-    
+    // ── Delete face modal ──────────────────────────────
+    document.getElementById('delete-face-btn').addEventListener('click', () => {
+      const m = document.getElementById('delete-confirm-modal');
+      m.style.display = 'flex';
+    });
+    document.getElementById('cancel-delete-face').addEventListener('click', () => {
+      document.getElementById('delete-confirm-modal').style.display = 'none';
+    });
+    document.getElementById('confirm-delete-face').addEventListener('click', async () => {
+      try {
+        await api.delete('/face/delete');
+        showToast('Biometric data deleted successfully.', 'success');
+        document.getElementById('delete-confirm-modal').style.display = 'none';
+        loadMe();
+      } catch(e) {
+        showToast('Failed to delete: ' + e.message, 'error');
+      }
+    });
+
+    // ── Logout ─────────────────────────────────────────
     document.getElementById('logout-btn').addEventListener('click', () => {
       AppState.clearAuth();
       window.location.href = '/pages/login.html';
     });
+
+    // ── Init ───────────────────────────────────────────
+    loadMe();
+    loadAll();
   </script>
 </body>
 </html>

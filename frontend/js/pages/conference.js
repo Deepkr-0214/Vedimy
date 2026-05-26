@@ -2,6 +2,11 @@ import { AppState } from '../core/state.js';
 import { api } from '../core/api.js';
 import { showToast } from '../components/toast.js';
 
+const MIC_ON_SVG = `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>`;
+const MIC_OFF_SVG = `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 11h-1.7c0 .74-.16 1.43-.43 2.05l1.23 1.23c.56-.98.9-2.09.9-3.28zm-4.02.17l-1.98-1.98V5c0-1.66-1.34-3-3-3S7 3.34 7 5v.17l4.17 4.17zM4.27 3L3 4.27l6.01 6.01V11c0 1.66 1.33 3 2.99 3 .22 0 .44-.03.65-.08l1.79 1.79c-.73.47-1.59.79-2.53.87V21h2v-3.08c1.39-.17 2.63-.7 3.65-1.47l2.8 2.8L21 18l-3.66-3.66L4.27 3z"/></svg>`;
+const CAM_ON_SVG = `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>`;
+const CAM_OFF_SVG = `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M21 6.5l-4 4V7c0-.55-.45-1-1-1H9.82L21 17.18V6.5zM3.27 2L2 3.27 4.73 6H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.21 0 .39-.08.55-.18L19.27 21 20.5 19.73 3.27 2zM15 16.27l-9-9V16h9v.27z"/></svg>`;
+
 if (!AppState.getToken()) window.location.href = '/pages/login.html';
 
 const params = new URLSearchParams(window.location.search);
@@ -53,6 +58,7 @@ class PeerManager {
     if (existing) { existing.querySelector('video').srcObject = stream; return; }
     const tile = document.createElement('div');
     tile.className = 'video-tile'; tile.id = `tile-${peerId}`;
+    tile.dataset.userId = participantMap[peerId]?.user_id || '';
     tile.innerHTML = `<video autoplay playsinline></video><div class="name-label">${name}</div>`;
     tile.querySelector('video').srcObject = stream;
     document.getElementById('video-grid').appendChild(tile);
@@ -110,7 +116,7 @@ async function init() {
           waitMuted = !waitMuted;
           localStream?.getAudioTracks().forEach(t => t.enabled = !waitMuted);
           const btn = document.getElementById('waiting-mute-btn');
-          btn.textContent = waitMuted ? '🔇' : '🎤';
+          btn.innerHTML = waitMuted ? MIC_OFF_SVG : MIC_ON_SVG;
           btn.style.background = waitMuted ? '#EA4335' : '#3C4043';
         });
 
@@ -120,7 +126,7 @@ async function init() {
           waitCamOff = !waitCamOff;
           localStream?.getVideoTracks().forEach(t => t.enabled = !waitCamOff);
           const btn = document.getElementById('waiting-video-btn');
-          btn.textContent = waitCamOff ? '🚫' : '📷';
+          btn.innerHTML = waitCamOff ? CAM_OFF_SVG : CAM_ON_SVG;
           btn.style.background = waitCamOff ? '#EA4335' : '#3C4043';
           const waitVideo = document.getElementById('waiting-camera');
           if (waitVideo) waitVideo.style.opacity = waitCamOff ? '0.3' : '1';
@@ -237,6 +243,7 @@ async function proceedToJoin() {
   // Render local tile
   const localTile = document.createElement('div');
   localTile.className = 'video-tile'; localTile.id = 'tile-local';
+  localTile.dataset.userId = AppState.getUser()?.id || '';
   localTile.innerHTML = `<video autoplay playsinline muted></video>
     <div class="name-label" style="display:flex;align-items:center;gap:0.5rem;">
       <span id="local-name-display">${AppState.getUser()?.name || 'You'} (You)</span>
@@ -406,6 +413,18 @@ async function proceedToJoin() {
   socket.on('clear_whiteboard', () => {
     if(wbCtx && wbCanvas) wbCtx.clearRect(0, 0, wbCanvas.width, wbCanvas.height);
   });
+
+  socket.on('participant_video_effect', ({ user_id, effect }) => {
+    const tiles = document.querySelectorAll('.video-tile');
+    tiles.forEach(tile => {
+      if (tile.dataset.userId == user_id || (user_id === AppState.getUser()?.id && tile.id === 'tile-local')) {
+        tile.classList.remove('fx-blur', 'fx-synth', 'fx-hacker');
+        if (effect !== 'none') {
+          tile.classList.add(`fx-${effect}`);
+        }
+      }
+    });
+  });
 }
 
 function addParticipant(peerId, name, userId, email = '') {
@@ -453,7 +472,7 @@ document.getElementById('mute-btn').addEventListener('click', () => {
   isMuted = !isMuted;
   localStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
   const btn = document.getElementById('mute-btn');
-  btn.textContent = isMuted ? '🔇' : '🎤';
+  btn.innerHTML = isMuted ? MIC_OFF_SVG : MIC_ON_SVG;
   btn.classList.toggle('active', isMuted);
   btn.title = isMuted ? 'Unmute Microphone' : 'Mute Microphone';
   socket?.emit('mute_status', { room_code: roomCode, muted: isMuted });
@@ -463,7 +482,7 @@ document.getElementById('video-btn').addEventListener('click', () => {
   isVideoOff = !isVideoOff;
   localStream.getVideoTracks().forEach(t => t.enabled = !isVideoOff);
   const btn = document.getElementById('video-btn');
-  btn.textContent = isVideoOff ? '🚫' : '📷';
+  btn.innerHTML = isVideoOff ? CAM_OFF_SVG : CAM_ON_SVG;
   btn.classList.toggle('active', isVideoOff);
   btn.title = isVideoOff ? 'Turn Camera On' : 'Turn Camera Off';
   // Grey out local tile when cam is off
@@ -982,27 +1001,73 @@ window.promoteCoHost = (userId, name) => {
   showToast(`${name} promoted to Co-Host`, 'success');
 };
 
-// ─── Participant Name Change ──────────────────────────────────────────
-// Any participant (non-host) can request a display name change
-document.getElementById('rename-btn')?.addEventListener('click', () => {
+// ─── Settings Modal & Background Glow ────────────────────────────────
+document.getElementById('settings-btn')?.addEventListener('click', () => {
+  const modal = document.getElementById('settings-modal');
+  if (modal) {
+    modal.style.display = 'flex';
+    const input = document.getElementById('settings-name-input');
+    if (input) input.value = AppState.getUser()?.name || 'Guest';
+  }
+});
+
+document.getElementById('settings-save-name-btn')?.addEventListener('click', async () => {
+  const input = document.getElementById('settings-name-input');
+  const newName = input?.value?.trim();
+  if (!newName) return;
   const user = AppState.getUser();
-  const oldName = user.name || 'Me';
-  const newName = prompt(`Rename yourself (current: ${oldName}):`, oldName);
-  if (newName && newName.trim() && newName.trim() !== oldName) {
+  const oldName = user.name || 'Guest';
+  if (newName === oldName) return;
+
+  try {
+    await api.put('/auth/profile/name', { name: newName });
+    user.name = newName;
+    AppState.setAuth(user, AppState.getToken());
+    
+    // Update local video name labels
+    const localName = document.getElementById('local-name-display');
+    if (localName) localName.textContent = `${newName} (You)`;
+    const selfLabel = document.getElementById('self-name-label');
+    if (selfLabel) selfLabel.textContent = newName;
+
+    // Notify others
     socket?.emit('name_changed', {
       room_code: roomCode,
       user_id: user.id,
       old_name: oldName,
-      new_name: newName.trim(),
+      new_name: newName,
       email: user.email,
       host_id: roomData?.host_id
     });
-    // Update local display
-    document.getElementById('self-name-label')?.textContent && (
-      document.getElementById('self-name-label').textContent = newName.trim()
-    );
-    showToast(`Name changed to "${newName.trim()}"`, 'success');
+    
+    showToast(`Name updated to "${newName}"`, 'success');
+  } catch(e) {
+    showToast('Failed to update name', 'error');
   }
+});
+
+// Background FX toggles
+document.querySelectorAll('.bg-fx-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.bg-fx-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    
+    const fx = btn.getAttribute('data-fx');
+    const localTile = document.getElementById('tile-local');
+    
+    if (localTile) {
+      localTile.classList.remove('fx-blur', 'fx-synth', 'fx-hacker');
+      if (fx !== 'none') {
+        localTile.classList.add(`fx-${fx}`);
+      }
+    }
+    
+    socket?.emit('video_effect', {
+      room_code: roomCode,
+      user_id: AppState.getUser().id,
+      effect: fx
+    });
+  });
 });
 
 // ─── Exam Pause / Resume (Host only) ─────────────────────────────────

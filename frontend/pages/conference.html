@@ -79,6 +79,51 @@
     .right-icon-btn:hover { background: rgba(255,255,255,0.1); }
     .participant-count { font-size: 0.9rem; font-weight: 500; margin-left: 4px; }
 
+    /* Virtual Background / Studio Effects */
+    .video-tile.fx-blur video {
+      filter: blur(8px) contrast(1.1) saturate(1.2);
+    }
+    .video-tile.fx-synth {
+      box-shadow: 0 0 25px rgba(168, 85, 247, 0.6), 0 0 50px rgba(168, 85, 247, 0.4);
+      border: 2px solid #a855f7 !important;
+      animation: pulseSynth 2s infinite ease-in-out;
+    }
+    .video-tile.fx-synth video {
+      filter: hue-rotate(280deg) saturate(1.4) contrast(1.15);
+    }
+    .video-tile.fx-hacker {
+      box-shadow: 0 0 25px rgba(16, 185, 129, 0.6), 0 0 50px rgba(16, 185, 129, 0.4);
+      border: 2px solid #10b981 !important;
+    }
+    .video-tile.fx-hacker video {
+      filter: sepia(0.8) hue-rotate(60deg) saturate(2.5) brightness(0.9);
+    }
+
+    @keyframes pulseSynth {
+      0%, 100% { box-shadow: 0 0 15px rgba(168, 85, 247, 0.5); }
+      50% { box-shadow: 0 0 35px rgba(168, 85, 247, 0.8), 0 0 70px rgba(168, 85, 247, 0.5); }
+    }
+
+    .bg-fx-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px;
+      padding: 1rem;
+      color: white;
+      cursor: pointer;
+      font-family: inherit;
+      text-align: left;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .bg-fx-btn.active {
+      border-color: #60a5fa !important;
+      background: rgba(96, 165, 250, 0.15) !important;
+      box-shadow: 0 0 12px rgba(96, 165, 250, 0.25);
+    }
+
     /* Right Side Panel */
     .side-panel {
       position: fixed; top: 16px; right: 16px; bottom: 16px; width: 360px;
@@ -158,10 +203,18 @@
         Time waiting: <span id="waiting-timer" style="color:#8AB4F8;font-weight:600;">0:00</span>
       </p>
 
-      <!-- Camera/Mic toggles while waiting -->
       <div style="display:flex;gap:0.75rem;justify-content:center;margin-bottom:1.25rem;">
-        <button id="waiting-mute-btn" title="Toggle Microphone" style="width:44px;height:44px;border-radius:50%;border:none;cursor:pointer;background:#3C4043;color:white;font-size:1.2rem;transition:all 0.2s;">🎤</button>
-        <button id="waiting-video-btn" title="Toggle Camera" style="width:44px;height:44px;border-radius:50%;border:none;cursor:pointer;background:#3C4043;color:white;font-size:1.2rem;transition:all 0.2s;">📷</button>
+        <button id="waiting-mute-btn" title="Toggle Microphone" style="width:44px;height:44px;border-radius:50%;border:none;cursor:pointer;background:#3C4043;color:white;display:inline-flex;align-items:center;justify-content:center;transition:all 0.2s;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+          </svg>
+        </button>
+        <button id="waiting-video-btn" title="Toggle Camera" style="width:44px;height:44px;border-radius:50%;border:none;cursor:pointer;background:#3C4043;color:white;display:inline-flex;align-items:center;justify-content:center;transition:all 0.2s;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+          </svg>
+        </button>
       </div>
 
       <!-- Leave button -->
@@ -188,10 +241,27 @@
         </div>
         
         <div class="controls-center">
-          <button class="ctrl-btn" id="mute-btn" title="Toggle Microphone">🎤</button>
-          <button class="ctrl-btn" id="video-btn" title="Toggle Camera">📷</button>
-          <button class="ctrl-btn" id="screen-btn" title="Share Screen">🖥️</button>
-          <button class="ctrl-btn" id="hand-btn" title="Raise Hand">✋</button>
+          <button class="ctrl-btn" id="mute-btn" title="Toggle Microphone">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+              <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+            </svg>
+          </button>
+          <button class="ctrl-btn" id="video-btn" title="Toggle Camera">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+            </svg>
+          </button>
+          <button class="ctrl-btn" id="screen-btn" title="Share Screen">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.11-.9-2-2-2H4c-1.11 0-2 .89-2 2v10c0 1.1.89 2 2 2H0v2h24v-2h-4zM4 16V6h16v10H4z"/>
+            </svg>
+          </button>
+          <button class="ctrl-btn" id="hand-btn" title="Raise Hand">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M12 1c-.83 0-1.5.67-1.5 1.5v8.2c-.37-.22-.8-.32-1.23-.28L6.41 10.9a1.5 1.5 0 0 0-1.49 1.49c0 .4.16.78.44 1.06l3.75 3.75c.34.34.53.8.53 1.28V21c0 1.1.9 2 2 2h5.5c1.02 0 1.88-.77 1.98-1.78l.47-4.7c.06-.55.33-1.05.75-1.41.4-.34.62-.84.62-1.36V10.5c0-.83-.67-1.5-1.5-1.5-.14 0-.27.02-.4.05V7.5c0-.83-.67-1.5-1.5-1.5-.17 0-.33.03-.49.08V4.5c0-.83-.67-1.5-1.5-1.5-.18 0-.35.03-.51.08V2.5C13.5 1.67 12.83 1 12 1z"/>
+            </svg>
+          </button>
           
           <button class="ctrl-btn" id="host-exam-btn" title="Create Exam" style="display:none;background:#fce8e6;color:#d93025;">📝</button>
           <button class="ctrl-btn" id="host-record-btn" title="Record" style="display:none;background:#e8f0fe;color:#1a73e8;">⏺️</button>
@@ -200,9 +270,17 @@
           <button class="ctrl-btn" id="host-quiz-btn" title="Live Quiz" style="display:none;background:#e8eaed;color:#202124;">📊</button>
           <button class="ctrl-btn" id="host-lock-btn" title="Lock Room" style="display:none;background:#3c4043;color:white;">🔓</button>
           <button class="ctrl-btn" id="host-pause-exam-btn" title="Pause Exam" style="display:none;background:#fff0cc;color:#b06000;">⏸️ Pause Exam</button>
-          <button class="ctrl-btn" id="rename-btn" title="Change Display Name" style="font-size:0.8rem;padding:0.4rem 0.75rem;">✏️ Rename</button>
+          <button class="ctrl-btn" id="settings-btn" title="Settings & Backgrounds">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>
+            </svg>
+          </button>
           
-          <button class="ctrl-btn danger leave" id="leave-btn" title="Leave call">📞</button>
+          <button class="ctrl-btn danger leave" id="leave-btn" title="Leave call">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M12 9c-2.2 0-4.3.3-6.2.9v4c0 .5-.3.9-.7 1.1-1.2.6-2.3 1.5-3.3 2.5-.3.3-.7.4-1.1.4-.4 0-.8-.1-1.1-.4L.4 16.7c-.3-.3-.4-.7-.4-1.1 0-.4.1-.8.4-1.1C3.7 11.2 7.7 9.5 12 9.5s8.3 1.7 11.6 5c.3.3.4.7.4 1.1 0 .4-.1.8-.4 1.1l-2.9 2.9c-.3.3-.7.4-1.1.4-.4 0-.8-.1-1.1-.4-1-1-2.1-1.9-3.3-2.5-.4-.2-.7-.6-.7-1.1v-4c-1.9-.6-4-.9-6.2-.9z"/>
+            </svg>
+          </button>
         </div>
 
         <div class="controls-right">
@@ -331,6 +409,48 @@ s0.parentNode.insertBefore(s1,s0);
 
 <!-- Vedimy Chatbot Script -->
 <script src="../js/chatbot.js"></script>
+
+  <!-- Settings Modal (Rename & Virtual Backgrounds) -->
+  <div id="settings-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
+    <div class="glass-card" style="width:90%;max-width:440px;background:rgba(30,30,40,0.9);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:2rem;color:white;box-shadow:0 20px 50px rgba(0,0,0,0.4);font-family:'DM Sans',sans-serif;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+        <h3 style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.3rem;margin:0;background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">🔧 Room Settings</h3>
+        <button onclick="document.getElementById('settings-modal').style.display='none'" style="background:transparent;border:none;color:#94a3b8;font-size:1.3rem;cursor:pointer;line-height:1;">✕</button>
+      </div>
+
+      <!-- Section 1: Display Name -->
+      <div style="margin-bottom:1.5rem;">
+        <label style="display:block;margin-bottom:0.5rem;font-size:0.85rem;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Display Name</label>
+        <div style="display:flex;gap:0.5rem;">
+          <input type="text" id="settings-name-input" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:0.75rem;color:white;outline:none;font-family:inherit;font-size:0.95rem;transition:border-color 0.2s;" placeholder="Your Name">
+          <button id="settings-save-name-btn" class="btn-primary" style="padding:0.75rem 1.25rem;font-size:0.9rem;">Save</button>
+        </div>
+      </div>
+
+      <!-- Section 2: Virtual Backgrounds / Studio Filters -->
+      <div>
+        <label style="display:block;margin-bottom:0.75rem;font-size:0.85rem;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Virtual Background & Studio Glow</label>
+        <div style="display:grid;grid-template-columns:repeat(2, 1fr);gap:0.75rem;" id="bg-effects-grid">
+          <button class="bg-fx-btn active" data-fx="none">
+            <span style="font-size:1.3rem;">🚫</span>
+            <span style="font-weight:600;font-size:0.85rem;">Normal</span>
+          </button>
+          <button class="bg-fx-btn" data-fx="blur">
+            <span style="font-size:1.3rem;">✨</span>
+            <span style="font-weight:600;font-size:0.85rem;">Soft Focus Blur</span>
+          </button>
+          <button class="bg-fx-btn" data-fx="synth">
+            <span style="font-size:1.3rem;">🌆</span>
+            <span style="font-weight:600;font-size:0.85rem;">Synthwave Pulse</span>
+          </button>
+          <button class="bg-fx-btn" data-fx="hacker">
+            <span style="font-size:1.3rem;">🟢</span>
+            <span style="font-weight:600;font-size:0.85rem;">Hacker Matrix</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
 </body>
 </html>

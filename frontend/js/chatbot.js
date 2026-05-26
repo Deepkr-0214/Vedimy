@@ -1,4 +1,42 @@
 // Chatbot JS
+
+// Initialize Tawk_API centrally and configure it to stay hidden to avoid overlapping the float button
+window.Tawk_API = window.Tawk_API || {};
+window.Tawk_API.onLoad = function() {
+    if (typeof window.Tawk_API.hideWidget === 'function') {
+        window.Tawk_API.hideWidget();
+    }
+};
+window.Tawk_API.onChatMaximized = function() {
+    const floatingBtn = document.getElementById('chatbot-floating-btn');
+    if (floatingBtn) {
+        floatingBtn.style.display = 'none';
+    }
+};
+window.Tawk_API.onChatMinimized = function() {
+    if (typeof window.Tawk_API.hideWidget === 'function') {
+        window.Tawk_API.hideWidget();
+    }
+    const floatingBtn = document.getElementById('chatbot-floating-btn');
+    if (floatingBtn) {
+        floatingBtn.style.display = 'flex';
+    }
+};
+window.Tawk_API.onChatClosed = function() {
+    if (typeof window.Tawk_API.hideWidget === 'function') {
+        window.Tawk_API.hideWidget();
+    }
+    const floatingBtn = document.getElementById('chatbot-floating-btn');
+    if (floatingBtn) {
+        floatingBtn.style.display = 'flex';
+    }
+};
+
+// Immediate hide fallback if Tawk.to has already initialized
+if (window.Tawk_API && typeof window.Tawk_API.hideWidget === 'function') {
+    window.Tawk_API.hideWidget();
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     fetch('/components/chatbot.html')
         .then(response => {
@@ -24,12 +62,149 @@ function initChatbot() {
 
     if (!floatingBtn || !container) return;
 
-    floatingBtn.addEventListener('click', () => {
+    // Make Floating Button Draggable & Handle Click Safely
+    let isBtnDragging = false;
+    let btnStartX = 0, btnStartY = 0;
+    let btnStartLeft = 0, btnStartTop = 0;
+
+    floatingBtn.style.cursor = 'grab';
+
+    // Desktop mouse events
+    floatingBtn.addEventListener('mousedown', dragBtnStart);
+    // Mobile touch events
+    floatingBtn.addEventListener('touchstart', dragBtnStart, { passive: false });
+
+    function dragBtnStart(e) {
+        if (e.type === 'mousedown' && e.button !== 0) return;
+        
+        // Prevent default browser behavior (text selection, native drag ghosting)
+        e.preventDefault();
+
+        const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+        const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+
+        btnStartX = clientX;
+        btnStartY = clientY;
+        isBtnDragging = false;
+
+        const rect = floatingBtn.getBoundingClientRect();
+        btnStartLeft = rect.left;
+        btnStartTop = rect.top;
+
+        floatingBtn.classList.add('dragging');
+
+        if (e.type === 'mousedown') {
+            document.addEventListener('mouseup', dragBtnEnd);
+            document.addEventListener('mousemove', dragBtnMove);
+        } else {
+            document.addEventListener('touchend', dragBtnEnd);
+            document.addEventListener('touchmove', dragBtnMove, { passive: false });
+        }
+    }
+
+    function dragBtnMove(e) {
+        e.preventDefault();
+
+        const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+        const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+
+        const deltaX = clientX - btnStartX;
+        const deltaY = clientY - btnStartY;
+
+        // Differentiate drag from click
+        if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+            isBtnDragging = true;
+        }
+
+        let newLeft = btnStartLeft + deltaX;
+        let newTop = btnStartTop + deltaY;
+
+        // Bounding collision with screen boundaries
+        const rect = floatingBtn.getBoundingClientRect();
+        const width = rect.width;
+        const height = rect.height;
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+
+        if (newLeft < 10) newLeft = 10;
+        if (newTop < 10) newTop = 10;
+        if (newLeft + width > windowWidth - 10) newLeft = windowWidth - width - 10;
+        if (newTop + height > windowHeight - 10) newTop = windowHeight - height - 10;
+
+        floatingBtn.style.top = newTop + "px";
+        floatingBtn.style.left = newLeft + "px";
+        floatingBtn.style.bottom = "auto";
+        floatingBtn.style.right = "auto";
+
+        // Align the chatbot window relative to the new button position
+        if (container && !container.classList.contains('chatbot-hidden')) {
+            alignChatbotWindow(newLeft, newTop);
+        }
+    }
+
+    function dragBtnEnd(e) {
+        floatingBtn.classList.remove('dragging');
+        if (e.type === 'mouseup') {
+            document.removeEventListener('mouseup', dragBtnEnd);
+            document.removeEventListener('mousemove', dragBtnMove);
+        } else {
+            document.removeEventListener('touchend', dragBtnEnd);
+            document.removeEventListener('touchmove', dragBtnMove);
+        }
+
+        // Prevent standard click from firing if we dragged
+        if (isBtnDragging) {
+            floatingBtn.dataset.dragged = "true";
+            setTimeout(() => {
+                delete floatingBtn.dataset.dragged;
+            }, 50);
+        } else {
+            floatingBtn.dataset.dragged = "false";
+        }
+    }
+
+    floatingBtn.addEventListener('click', (e) => {
+        if (floatingBtn.dataset.dragged === "true") {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
         container.classList.toggle('chatbot-hidden');
         if (!container.classList.contains('chatbot-hidden')) {
             chatInput.focus();
+            const btnRect = floatingBtn.getBoundingClientRect();
+            alignChatbotWindow(btnRect.left, btnRect.top);
         }
     });
+
+    // Helper to align chatbot window right above/next to floating button
+    function alignChatbotWindow(btnLeft, btnTop) {
+        if (!container) return;
+        const rect = container.getBoundingClientRect();
+        const btnRect = floatingBtn.getBoundingClientRect();
+        
+        let newTop;
+        // If button is in the top half of viewport, show window below it
+        if (btnTop < window.innerHeight / 2) {
+            newTop = btnTop + btnRect.height + 15;
+        } else {
+            // Otherwise, show window above it
+            newTop = btnTop - rect.height - 15;
+        }
+        
+        let newLeft = btnLeft - rect.width + btnRect.width; // align right edges
+
+        // Screen collision boundaries for chatbot window
+        if (newLeft < 10) newLeft = 10;
+        if (newTop < 10) newTop = 10;
+        if (newLeft + rect.width > window.innerWidth - 10) newLeft = window.innerWidth - rect.width - 10;
+        if (newTop + rect.height > window.innerHeight - 10) newTop = window.innerHeight - rect.height - 10;
+
+        container.style.top = newTop + "px";
+        container.style.left = newLeft + "px";
+        container.style.bottom = "auto";
+        container.style.right = "auto";
+    }
 
     closeBtn.addEventListener('click', () => {
         container.classList.add('chatbot-hidden');
@@ -38,8 +213,14 @@ function initChatbot() {
     if (tawkBtn) {
         tawkBtn.addEventListener('click', () => {
             if (window.Tawk_API && typeof window.Tawk_API.maximize === 'function') {
+                if (typeof window.Tawk_API.showWidget === 'function') {
+                    window.Tawk_API.showWidget();
+                }
                 window.Tawk_API.maximize();
                 container.classList.add('chatbot-hidden');
+                if (floatingBtn) {
+                    floatingBtn.style.display = 'none';
+                }
             } else {
                 addMessage("Live support is currently unavailable or still loading. Please ensure your adblocker isn't blocking it.", 'bot');
             }
@@ -135,5 +316,89 @@ function initChatbot() {
         // Insert before typing indicator
         messagesContainer.appendChild(msgDiv);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // Make Chatbot Draggable by its Header
+    const header = container.querySelector('.chatbot-header');
+    if (header) {
+        header.style.cursor = 'grab';
+        let winStartX = 0, winStartY = 0;
+        let winStartLeft = 0, winStartTop = 0;
+
+        header.addEventListener('mousedown', dragWinStart);
+        header.addEventListener('touchstart', dragWinStart, { passive: false });
+
+        function dragWinStart(e) {
+            if (e.type === 'mousedown' && e.button !== 0) return;
+            
+            // Do not drag if close button or other interactive element in header was clicked
+            if (e.target.closest('#chatbot-close-btn') || e.target.closest('button')) return;
+
+            e.preventDefault();
+
+            const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+
+            winStartX = clientX;
+            winStartY = clientY;
+
+            const rect = container.getBoundingClientRect();
+            winStartLeft = rect.left;
+            winStartTop = rect.top;
+
+            container.classList.add('dragging');
+            header.style.cursor = 'grabbing';
+
+            if (e.type === 'mousedown') {
+                document.addEventListener('mouseup', dragWinEnd);
+                document.addEventListener('mousemove', dragWinMove);
+            } else {
+                document.addEventListener('touchend', dragWinEnd);
+                document.addEventListener('touchmove', dragWinMove, { passive: false });
+            }
+        }
+
+        function dragWinMove(e) {
+            e.preventDefault();
+
+            const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+            const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+
+            const deltaX = clientX - winStartX;
+            const deltaY = clientY - winStartY;
+
+            let newLeft = winStartLeft + deltaX;
+            let newTop = winStartTop + deltaY;
+
+            // Bounding collision with screen edges
+            const rect = container.getBoundingClientRect();
+            const width = rect.width;
+            const height = rect.height;
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+
+            if (newLeft < 0) newLeft = 0;
+            if (newTop < 0) newTop = 0;
+            if (newLeft + width > windowWidth) newLeft = windowWidth - width;
+            if (newTop + height > windowHeight) newTop = windowHeight - height;
+
+            container.style.top = newTop + "px";
+            container.style.left = newLeft + "px";
+            container.style.bottom = "auto";
+            container.style.right = "auto";
+        }
+
+        function dragWinEnd(e) {
+            container.classList.remove('dragging');
+            header.style.cursor = 'grab';
+
+            if (e.type === 'mouseup') {
+                document.removeEventListener('mouseup', dragWinEnd);
+                document.removeEventListener('mousemove', dragWinMove);
+            } else {
+                document.removeEventListener('touchend', dragWinEnd);
+                document.removeEventListener('touchmove', dragWinMove);
+            }
+        }
     }
 }

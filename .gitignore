@@ -34,6 +34,7 @@ instance/
 *.log
 backend/server.out.log
 backend/server.err.log
+test.txt
 
 # Generated uploads/reports/screenshots
 backend/static/screenshots/

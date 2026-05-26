@@ -279,3 +279,14 @@ def on_violation_warning_notify(data):
             'message': message
         }, room=f"user_{target_user_id}")
 
+@socketio.on('video_effect', namespace='/conference')
+def on_video_effect(data):
+    """Broadcast background visual effect so other participants' tiles update."""
+    room_code = data.get('room_code')
+    user_id = data.get('user_id')
+    effect = data.get('effect', 'none')
+    emit('participant_video_effect', {
+        'user_id': user_id,
+        'effect': effect
+    }, room=room_code, include_self=False)
+

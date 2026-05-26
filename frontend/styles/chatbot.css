@@ -1,14 +1,14 @@
 /* Chatbot CSS - Modern Glassmorphism UI */
 #vedimy-chatbot-container {
     position: fixed;
-    bottom: 90px;
+    top: 170px;
     right: 30px;
     width: 350px;
     height: 500px;
     max-height: 80vh;
-    z-index: 9999;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    transform-origin: bottom right;
+    z-index: 999999 !important;
+    transition: opacity 0.3s, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform-origin: top right;
 }
 
 #vedimy-chatbot-container.chatbot-hidden {
@@ -257,7 +257,7 @@
 
 .chatbot-floating-btn {
     position: fixed;
-    bottom: 30px;
+    top: 100px;
     right: 30px;
     width: 60px;
     height: 60px;
@@ -271,8 +271,8 @@
     justify-content: center;
     align-items: center;
     box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
-    z-index: 9998;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 999998 !important;
+    transition: opacity 0.3s, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s;
 }
 
 .chatbot-floating-btn:hover {
@@ -339,4 +339,11 @@
 #tawkchat-minified-wrapper {
     bottom: 20px !important;
     right: 100px !important;
+}
+
+/* Dragging overrides for instant positioning */
+#vedimy-chatbot-container.dragging,
+#chatbot-floating-btn.dragging {
+    transition: none !important;
+    transform: none !important;
 }

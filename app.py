@@ -16,8 +16,8 @@ from extensions import socketio
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    print(f"🚀 Starting Vedimy Server from {backend_dir}...")
-    print(f"👉 OPEN YOUR BROWSER HERE: http://127.0.0.1:{port}")
-    print(f"👉 OR CLICK HERE: http://localhost:{port}\n")
+    print(f"Starting Vedimy Server from {backend_dir}...")
+    print(f"OPEN YOUR BROWSER HERE: http://127.0.0.1:{port}")
+    print(f"OR CLICK HERE: http://localhost:{port}\n")
     app = create_app()
     socketio.run(app, debug=True, host='0.0.0.0', port=port)

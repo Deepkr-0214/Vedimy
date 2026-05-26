@@ -6,9 +6,20 @@ from services.ai_teaching_service import (
     generate_questions, extract_pdf_text, SUPPORTED_LANGUAGES
 )
 from extensions import db
-import uuid, time
+import uuid, time, json
 
 ai_bp = Blueprint('ai_teaching', __name__)
+
+def safe_json_loads(val):
+    if not val:
+        return []
+    if isinstance(val, str):
+        try:
+            return json.loads(val)
+        except Exception:
+            return val
+    return val
+
 
 @ai_bp.route('/record-lecture', methods=['POST'])
 @jwt_required()
@@ -49,9 +60,9 @@ def summarize():
         return jsonify({
             'ai_lecture_id': str(existing.id),
             'summary': existing.summary,
-            'key_points': existing.key_points,
-            'important_topics': existing.important_topics,
-            'keywords': existing.keywords,
+            'key_points': safe_json_loads(existing.key_points),
+            'important_topics': safe_json_loads(existing.important_topics),
+            'keywords': safe_json_loads(existing.keywords),
             'cached': True
         })
     
@@ -60,9 +71,9 @@ def summarize():
     ai_lec = AILecture(
         lecture_id=lecture_id,
         summary=result['summary'],
-        key_points=result['key_points'],
-        important_topics=result['important_topics'],
-        keywords=result['keywords'],
+        key_points=json.dumps(result['key_points']),
+        important_topics=json.dumps(result['important_topics']),
+        keywords=json.dumps(result['keywords']),
         processing_status='done',
         processing_time_ms=result['processing_time_ms']
     )
@@ -72,12 +83,13 @@ def summarize():
     return jsonify({
         'ai_lecture_id': str(ai_lec.id),
         'summary': ai_lec.summary,
-        'key_points': ai_lec.key_points,
-        'important_topics': ai_lec.important_topics,
-        'keywords': ai_lec.keywords,
+        'key_points': safe_json_loads(ai_lec.key_points),
+        'important_topics': safe_json_loads(ai_lec.important_topics),
+        'keywords': safe_json_loads(ai_lec.keywords),
         'processing_time_ms': result['processing_time_ms'],
         'cached': False
     })
+
 
 @ai_bp.route('/translate', methods=['POST'])
 @jwt_required()
@@ -95,19 +107,20 @@ def translate():
     if cached:
         return jsonify({
             'translated_summary': cached.translated_summary,
-            'translated_key_points': cached.translated_key_points,
+            'translated_key_points': safe_json_loads(cached.translated_key_points),
             'language': target_lang,
             'language_name': SUPPORTED_LANGUAGES[target_lang],
             'cached': True
         })
     
-    result = translate_summary(ai_lec.summary, ai_lec.key_points, target_lang)
+    key_points_list = safe_json_loads(ai_lec.key_points)
+    result = translate_summary(ai_lec.summary, key_points_list, target_lang)
     
     translation = AITranslation(
         ai_lecture_id=ai_lecture_id,
         target_language=target_lang,
         translated_summary=result['summary'],
-        translated_key_points=result['key_points']
+        translated_key_points=json.dumps(result['key_points'])
     )
     db.session.add(translation)
     db.session.commit()
@@ -119,6 +132,7 @@ def translate():
         'language_name': SUPPORTED_LANGUAGES[target_lang],
         'cached': False
     })
+
 
 @ai_bp.route('/languages', methods=['GET'])
 def get_languages():
@@ -144,19 +158,20 @@ def generate_exam_questions():
         ai_lec = AILecture(
             lecture_id=lecture_id,
             summary=summary_result['summary'],
-            key_points=summary_result['key_points'],
-            important_topics=summary_result['important_topics'],
-            keywords=summary_result['keywords'],
+            key_points=json.dumps(summary_result['key_points']),
+            important_topics=json.dumps(summary_result['important_topics']),
+            keywords=json.dumps(summary_result['keywords']),
             processing_status='done',
             processing_time_ms=summary_result['processing_time_ms']
         )
         db.session.add(ai_lec)
         db.session.flush()
     
+    key_points_list = safe_json_loads(ai_lec.key_points)
     questions = generate_questions(
         transcript=lecture.transcript,
         summary=ai_lec.summary,
-        key_points=ai_lec.key_points,
+        key_points=key_points_list,
         count=count,
         q_type=q_type,
         difficulty=difficulty
@@ -167,7 +182,7 @@ def generate_exam_questions():
         ai_lecture_id=str(ai_lec.id),
         question_type=q_type,
         question_count=len(questions),
-        questions_json=questions,
+        questions_json=json.dumps(questions),
         difficulty=difficulty
     )
     db.session.add(record)
@@ -180,6 +195,7 @@ def generate_exam_questions():
         'type': q_type,
         'difficulty': difficulty
     })
+
 
 @ai_bp.route('/upload-pdf', methods=['POST'])
 @jwt_required()
@@ -236,8 +252,9 @@ def get_lecture_summary(lecture_id):
     
     return jsonify({
         'summary': ai_lec.summary,
-        'key_points': ai_lec.key_points,
-        'important_topics': ai_lec.important_topics,
-        'keywords': ai_lec.keywords,
-        'questions': questions.questions_json if questions else []
+        'key_points': safe_json_loads(ai_lec.key_points),
+        'important_topics': safe_json_loads(ai_lec.important_topics),
+        'keywords': safe_json_loads(ai_lec.keywords),
+        'questions': safe_json_loads(questions.questions_json) if questions else []
     })
+

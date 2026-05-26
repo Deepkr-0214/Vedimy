@@ -117,7 +117,7 @@
         </div>
 
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
-          <h3 style="font-size:1.1rem;font-weight:600;">Recent Rooms & Quick Actions</h3>
+          <h3 id="recent-rooms-title" style="font-size:1.1rem;font-weight:600;">Recent Rooms & Quick Actions</h3>
           <button class="btn-primary" id="create-room-btn" style="display:none;padding:0.5rem 1rem;font-size:0.9rem;">+ Create Room</button>
         </div>
 
@@ -343,6 +343,14 @@
       document.getElementById('link-biometric').style.display = 'flex';
       document.getElementById('link-guest-forms').style.display = 'flex';
       document.getElementById('link-monitor').style.display = 'flex';
+    } else {
+      // Guest customization: hide host specific panels and metrics
+      document.querySelector('.ref-stat-card .ref-stat-label').textContent = 'Attended Rooms';
+      document.getElementById('rooms-list').style.display = 'none';
+      const titleEl = document.getElementById('recent-rooms-title');
+      if (titleEl) titleEl.style.display = 'none';
+      document.getElementById('past-rooms-section').style.display = 'block';
+      document.getElementById('results-section').style.display = 'block';
     }
 
     // Mobile Menu
@@ -607,6 +615,9 @@
         const rooms = await api.get('/rooms/my-attended');
         const list = document.getElementById('past-rooms-list');
         const sec = document.getElementById('past-rooms-section');
+        if (AppState.getUser()?.role !== 'host') {
+          document.getElementById('stat-rooms').textContent = rooms.length;
+        }
         if (rooms.length > 0) {
           sec.style.display = 'block';
           list.innerHTML = rooms.map(r => `
@@ -923,13 +934,14 @@
       }
     });
 
-    loadRooms();
-    loadExams();
-    if (AppState.getUser()?.role !== 'host') {
+    if (AppState.getUser()?.role === 'host') {
+       loadRooms();
+    } else {
        loadPastRooms();
        loadExamResults();
        initGuestNotificationSocket();
     }
+    loadExams();
     
     fetchNotifications();
 

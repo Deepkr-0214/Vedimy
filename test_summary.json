@@ -1,0 +1,190 @@
+{
+    "success_count": 46,
+    "failed_count": 0,
+    "details": {
+        "Feature 1: Secure Host Registration": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 1: Secure Host Login": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 1: Face Recognition Authentication Support": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 2: Host Identity Verification": [
+            "SUCCESS",
+            ""
+        ],
+        "Guest Feature 1: Guest Account Registration": [
+            "SUCCESS",
+            ""
+        ],
+        "Guest Feature 1: Guest Secure Login": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 3: Create Live Online Session": [
+            "SUCCESS",
+            "Code: VDM-JBW2"
+        ],
+        "Feature 4: Public Room Code & Invitation Link System": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 3: Manage Live Online Sessions (Start)": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 5: Smart Guest Registration Form System Link Generation": [
+            "SUCCESS",
+            ""
+        ],
+        "Guest Feature 2: Registration Form Viewing": [
+            "SUCCESS",
+            ""
+        ],
+        "Guest Feature 3: Biometric Image Submission": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 5: Guest Database Biometric Storage": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 5: Host Registration Submissions Management": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 6: AI Bulk Guest Biometric Registration (Folder Upload)": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 6: Guest Biometric Profile List": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 7: Set Optional Biometric Entry Verification Modes": [
+            "SUCCESS",
+            ""
+        ],
+        "Guest Feature 5: AI-Based Face Matching System Verification": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 8: Automatic Guest Face Verification on Entry": [
+            "SUCCESS",
+            ""
+        ],
+        "Guest Feature 9: Room Entry & Waiting Room Access": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 4: Waiting Room Control": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 4: Host Waiting Room List Retrieval": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 4: Approve waiting room participants manually": [
+            "SUCCESS",
+            ""
+        ],
+        "Guest Feature 8: Secure Class Entry After Verification & Approval": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 10: View active participant list panel": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 30: Socket.IO Server Connection Established": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 14: AI Chatbot Assistant & Educational Guidance": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 14: Support Ticket Generation & Help System": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 18: Profile display name update": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 18: Name change socket detection & instant alert": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 21: PDF Study Material Upload & PyMuPDF Text Extraction": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 23: AI Lecture Summary & Smart Notes Generation": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 24: Multi-Language Translation (Summary to Hindi)": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 20: AI Question Paper Generator (MCQs/Subjective Questions)": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 26: Create & Schedule Exams": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 25: Connect AI-Generated Questions to Live Exam System": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 26: Start Exam Session (Timers Active)": [
+            "SUCCESS",
+            ""
+        ],
+        "Guest Feature 15: Establish Continuous AI Proctoring Socket Connection": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 15: Proctoring monitoring: Tab switches and Fullscreen exits": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 16: Cumulative Warning System Incremented": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 17: Screenshot & Evidence base64 Capturing & Storage": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 16: Host Violations Report Tracking Panel": [
+            "SUCCESS",
+            ""
+        ],
+        "Guest Feature 28: Exam Submission & Automated Score Grading": [
+            "SUCCESS",
+            "Score: 75.0"
+        ],
+        "Feature 27: Central Analytics Dashboard Statistics": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 28: Security, Biometrics, and Activity Auditing Logs Retrieval": [
+            "SUCCESS",
+            ""
+        ],
+        "Feature 3: End Online Session & Finalize Attendance": [
+            "SUCCESS",
+            ""
+        ]
+    }
+}
